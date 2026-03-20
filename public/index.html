@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DiscordBotSpeaker v1.4.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Unbounded:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0e0f11;--s1:#14151a;--s2:#1c1d24;--s3:#252730;
+  --border:#2e3040;--acc:#5865f2;--acc-h:#4752c4;
+  --green:#23d18b;--red:#f04747;--yellow:#faa61a;
+  --text:#dcddde;--muted:#72767d;--r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:14px;padding:0 20px;height:52px;background:#09090c;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;color:var(--acc);letter-spacing:.03em;white-space:nowrap}
+.logo span{color:var(--text);font-weight:700}
+#token-wrap{flex:1;display:flex;gap:8px;align-items:center}
+#token-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;outline:none;transition:border-color .15s}
+#token-input:focus{border-color:var(--acc)}
+#token-input::placeholder{color:var(--muted)}
+.btn{padding:7px 16px;border:none;border-radius:var(--r);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-acc{background:var(--acc);color:#fff}.btn-acc:hover{background:var(--acc-h)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+#bot-pill{display:none;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);padding:5px 10px;border-radius:20px;flex-shrink:0}
+#bot-pill.show{display:flex}
+#pill-av{width:22px;height:22px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;overflow:hidden;object-fit:cover}
+#pill-name{font-size:11px;color:var(--text);font-weight:600}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+
+/* LAYOUT */
+#layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:210px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-label{padding:14px 12px 6px;font-size:9.5px;font-weight:600;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.sb-scroll{overflow-y:auto;flex:1}
+.sb-scroll::-webkit-scrollbar{width:3px}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+.server-item,.chan-item{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 6px;border-radius:6px;cursor:pointer;font-size:11px;color:var(--muted);transition:all .15s}
+.server-item:hover,.chan-item:hover{background:var(--s3);color:var(--text)}
+.server-item.active{background:var(--acc);color:#fff}
+.chan-item.active{background:rgba(88,101,242,.18);color:#a5adfe}
+.srv-ico{width:26px;height:26px;border-radius:50%;background:var(--s3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px}
+.srv-ico img{width:100%;height:100%;object-fit:cover}
+.srv-name,.chan-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+#channels-block{border-top:1px solid var(--border)}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#chan-bar{display:flex;align-items:center;gap:10px;padding:0 16px;height:44px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;font-size:12px;font-weight:600}
+#chan-bar .hash{color:var(--muted);font-size:16px}
+#chan-title{flex:1}
+#refresh{background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all .15s}
+#refresh:hover{border-color:var(--acc);color:var(--acc)}
+
+/* MESSAGES */
+#messages{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+#messages::-webkit-scrollbar{width:5px}
+#messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.msg{display:flex;gap:10px;padding:5px 8px;border-radius:6px;transition:background .1s}
+.msg:hover{background:rgba(255,255,255,.03)}
+.msg.mine{background:rgba(88,101,242,.07)}.msg.mine:hover{background:rgba(88,101,242,.11)}
+.m-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;margin-top:2px}
+.m-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.m-body{flex:1;min-width:0}
+.m-head{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.m-author{font-size:12px;font-weight:600;color:#a5adfe}.m-author.bot-name{color:var(--green)}
+.m-tag{font-size:9px;background:var(--acc);color:#fff;padding:1px 5px;border-radius:3px}
+.m-time{font-size:10px;color:var(--muted)}
+.m-text{font-size:12px;color:var(--text);line-height:1.55;word-break:break-word;white-space:pre-wrap}
+.m-imgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.m-imgs img{max-width:280px;max-height:200px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);transition:opacity .15s}
+.m-imgs img:hover{opacity:.85}
+
+/* Poll card in messages */
+.poll-card{margin-top:8px;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;max-width:400px}
+.poll-q{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.poll-q-ico{font-size:16px}
+.poll-opt{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.poll-opt-emoji{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.poll-bar-wrap{flex:1;background:var(--s2);border-radius:5px;height:24px;overflow:hidden;position:relative}
+.poll-bar{height:100%;background:linear-gradient(90deg,var(--acc),#7289da);border-radius:5px;transition:width .5s ease}
+.poll-bar-label{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88%}
+.poll-pct{font-size:10px;color:var(--muted);white-space:nowrap;min-width:34px;text-align:right;font-weight:600}
+.poll-footer{font-size:10px;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+.poll-end-btn{font-size:10px;background:rgba(240,71,71,.12);border:1px solid rgba(240,71,71,.3);color:var(--red);padding:3px 9px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all .15s}
+.poll-end-btn:hover{background:rgba(240,71,71,.28)}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:11px;text-align:center}
+.empty .ico{font-size:38px;opacity:.25}
+
+/* INPUT ZONE */
+#input-zone{padding:10px 16px 14px;border-top:1px solid var(--border);background:var(--s1);flex-shrink:0}
+#mode-tabs{display:flex;gap:4px;margin-bottom:10px}
+.mode-tab{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;transition:all .15s}
+.mode-tab:hover{color:var(--text);border-color:var(--s3)}
+.mode-tab.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+
+/* Message panel */
+#previews{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+#previews:empty{display:none}
+.preview-item{position:relative;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:var(--s3);flex-shrink:0}
+.preview-item img{width:100%;height:100%;object-fit:cover}
+.preview-item .rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.75);border:none;border-radius:50%;color:#fff;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.preview-item .rm:hover{background:var(--red)}
+.preview-file{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);padding:4px;text-align:center;word-break:break-all}
+#composer{display:flex;align-items:flex-end;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;transition:border-color .15s}
+#composer:focus-within{border-color:var(--acc)}
+#msg-input{flex:1;background:none;border:none;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;resize:none;outline:none;min-height:22px;max-height:130px;line-height:1.5}
+#msg-input::placeholder{color:var(--muted)}
+.composer-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+#upload-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);width:32px;height:32px;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+#upload-btn:hover{border-color:var(--acc);color:var(--acc)}
+#file-count{position:absolute;top:-5px;right:-5px;background:var(--acc);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center}
+#file-count.show{display:flex}
+#file-input{display:none}
+#send-btn{background:var(--acc);border:none;border-radius:6px;color:#fff;width:32px;height:32px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
+#send-btn:hover:not(:disabled){background:var(--acc-h);transform:scale(1.06)}
+#send-btn:disabled{opacity:.3;cursor:not-allowed}
+#footer-info{display:flex;justify-content:space-between;margin-top:5px;font-size:9.5px;color:var(--muted)}
+#char-ctr.warn{color:var(--yellow)}#char-ctr.over{color:var(--red)}
+
+/* ═══ POLL PANEL ═══ */
+#poll-panel{display:none}
+#poll-panel.show{display:block}
+
+.pf{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+
+/* Question */
+.pf-section-label{font-size:9.5px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+#poll-q{width:100%;background:var(--s3);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:9px 12px;outline:none;transition:border-color .15s;resize:none}
+#poll-q:focus{border-color:var(--acc)}
+#poll-q::placeholder{color:var(--muted)}
+.q-counter{font-size:9px;color:var(--muted);text-align:right;margin-top:3px}
+.q-counter.warn{color:var(--yellow)}.q-counter.over{color:var(--red)}
+
+/* Answers */
+#answers-list{display:flex;flex-direction:column;gap:5px}
+.ans-row{display:flex;align-items:center;gap:6px}
+
+/* Emoji button per answer */
+.emoji-btn{
+  width:32px;height:32px;border-radius:7px;flex-shrink:0;
+  background:var(--s3);border:1.5px solid var(--border);
+  cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;position:relative;
+}
+.emoji-btn:hover{border-color:var(--acc)}
+.emoji-btn .emoji-placeholder{font-size:14px;color:var(--muted)}
+
+.ans-input{
+  flex:1;background:var(--s3);border:1.5px solid var(--border);border-radius:7px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;
+  padding:7px 10px;outline:none;transition:border-color .15s;
+}
+.ans-input:focus{border-color:var(--acc)}
+.ans-input::placeholder{color:var(--muted)}
+.ans-char{font-size:9px;color:var(--muted);min-width:28px;text-align:right;flex-shrink:0}
+.ans-char.warn{color:var(--yellow)}.ans-char.over{color:var(--red)}
+.rm-ans{
+  background:none;border:1.5px solid var(--border);border-radius:6px;
+  color:var(--muted);width:28px;height:28px;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.rm-ans:hover{border-color:var(--red);color:var(--red)}
+
+#add-answer{
+  background:none;border:1.5px dashed var(--border);color:var(--muted);
+  padding:7px;border-radius:7px;font-size:10px;cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;width:100%;transition:all .15s;margin-top:2px;
+}
+#add-answer:hover{border-color:var(--acc);color:var(--acc)}
+#add-answer:disabled{opacity:.3;cursor:not-allowed}
+
+/* Options row */
+.pf-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+
+/* Duration */
+.pf-field label{display:block;font-size:9.5px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.pf-select{
+  width:100%;background:var(--s3);border:1.5px solid var(--border);border-radius:7px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;
+  padding:8px 10px;outline:none;cursor:pointer;transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2372767d'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;
+}
+.pf-select:focus{border-color:var(--acc)}
+.pf-select option{background:var(--s2)}
+
+/* Multiselect toggle */
+.pf-toggle-wrap{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s3);border:1.5px solid var(--border);border-radius:7px;padding:8px 12px;
+}
+.pf-toggle-label{font-size:11px;color:var(--text);font-weight:600;display:flex;flex-direction:column;gap:2px}
+.pf-toggle-sub{font-size:9px;color:var(--muted);font-weight:400}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{
+  position:absolute;inset:0;background:var(--border);border-radius:10px;
+  cursor:pointer;transition:background .2s;
+}
+.toggle input:checked + .toggle-track{background:var(--acc)}
+.toggle-thumb{
+  position:absolute;top:3px;left:3px;width:14px;height:14px;
+  background:#fff;border-radius:50%;transition:left .2s;pointer-events:none;
+}
+.toggle input:checked ~ .toggle-thumb{left:19px}
+
+/* Post button */
+#send-poll-btn{
+  background:linear-gradient(135deg,var(--acc),#7289da);border:none;border-radius:7px;
+  color:#fff;padding:9px 22px;font-family:'Unbounded',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;gap:8px;justify-content:center;
+}
+#send-poll-btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 4px 16px rgba(88,101,242,.35)}
+#send-poll-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.pf-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#ans-hint{font-size:9.5px;color:var(--muted)}
+#ans-hint span{color:var(--acc);font-weight:600}
+
+/* ═══ EMOJI PICKER ═══ */
+#emoji-picker{
+  position:fixed;z-index:500;
+  background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  width:280px;padding:10px;
+  display:none;
+}
+#emoji-picker.show{display:block}
+.ep-search{
+  width:100%;background:var(--s3);border:1px solid var(--border);border-radius:6px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;
+  padding:6px 10px;outline:none;margin-bottom:8px;
+}
+.ep-search::placeholder{color:var(--muted)}
+.ep-search:focus{border-color:var(--acc)}
+.ep-cats{display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px}
+.ep-cats::-webkit-scrollbar{height:0}
+.ep-cat{background:none;border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:13px;cursor:pointer;transition:all .12s;color:var(--muted);white-space:nowrap}
+.ep-cat:hover,.ep-cat.active{background:var(--acc);border-color:var(--acc);color:#fff}
+.ep-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:180px;overflow-y:auto}
+.ep-grid::-webkit-scrollbar{width:3px}
+.ep-grid::-webkit-scrollbar-thumb{background:var(--border)}
+.ep-emoji{
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;border-radius:5px;cursor:pointer;transition:background .1s;border:none;background:none;
+}
+.ep-emoji:hover{background:var(--s3)}
+/* Limit badge */
+#limit-badge{
+  display:none;align-items:center;gap:6px;
+  font-size:10px;color:var(--muted);
+  background:var(--s3);border:1px solid var(--border);
+  padding:4px 10px;border-radius:6px;flex-shrink:0;
+}
+#limit-badge.show{display:flex}
+#limit-badge .limit-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tier0{background:var(--muted)}
+.tier1{background:#6eb5ff}
+.tier2{background:var(--acc)}
+.tier3{background:var(--green)}
+
+/* File size bars */
+.preview-item .size-bar{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--green);transition:background .2s;
+}
+.preview-item .size-bar.warn{background:var(--yellow)}
+.preview-item .size-bar.over{background:var(--red)}
+
+/* Error modal */
+#err-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:2000;align-items:center;justify-content:center;
+}
+#err-modal.show{display:flex}
+.err-box{
+  background:var(--s2);border:1px solid var(--border);border-radius:12px;
+  padding:24px 28px;max-width:420px;width:90%;
+}
+.err-box h3{font-family:'Unbounded',sans-serif;font-size:14px;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.err-box p{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:6px}
+.err-box .err-files{font-size:11px;color:var(--text);background:var(--s3);border-radius:6px;padding:8px 12px;margin:8px 0}
+.err-box .err-tier{font-size:11px;color:var(--muted);margin-top:8px}
+.err-box .boost-levels{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.boost-row{font-size:10px;color:var(--muted);padding:3px 6px;border-radius:4px;display:flex;justify-content:space-between}
+.boost-row.current{background:rgba(88,101,242,.2);color:var(--text)}
+.err-close{margin-top:14px;width:100%;background:var(--s3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px;cursor:pointer;transition:all .15s}
+.err-close:hover{border-color:var(--acc);color:var(--acc)}
+
+.ep-srv-emoji{
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:5px;cursor:pointer;transition:background .1s;border:none;background:none;padding:2px;
+}
+.ep-srv-emoji:hover{background:var(--s3)}
+.ep-srv-emoji img{width:24px;height:24px;object-fit:contain;border-radius:3px}
+.ep-section-label{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:6px 2px 3px;grid-column:1/-1}
+.emoji-btn img{width:20px;height:20px;object-fit:contain;border-radius:3px}
+.ep-remove{
+  width:100%;background:rgba(240,71,71,.1);border:1px solid rgba(240,71,71,.25);
+  border-radius:5px;color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:10px;
+  padding:4px;cursor:pointer;margin-top:6px;transition:all .15s;
+}
+.ep-remove:hover{background:rgba(240,71,71,.25)}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s3);border:1px solid var(--border);padding:8px 18px;border-radius:8px;font-size:11px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--green);color:var(--green)}
+#toast.err{border-color:var(--red);color:var(--red)}
+
+/* Lightbox */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.show{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
+
+/* ═══ DELETE BUTTON ═══ */
+.msg-actions{display:none;gap:4px;margin-left:auto;align-items:center;flex-shrink:0}
+.msg:hover .msg-actions{display:flex}
+.msg-del{background:none;border:1px solid transparent;border-radius:4px;color:var(--muted);font-size:11px;padding:2px 7px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all .15s;line-height:1}
+.msg-del:hover{border-color:var(--red);color:var(--red);background:rgba(240,71,71,.1)}
+.msg-edit{background:none;border:1px solid transparent;border-radius:4px;color:var(--muted);font-size:11px;padding:2px 7px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all .15s;line-height:1}
+.msg-edit:hover{border-color:var(--acc);color:var(--acc);background:rgba(88,101,242,.1)}
+.msg-reply{background:none;border:1px solid transparent;border-radius:4px;color:var(--muted);font-size:11px;padding:2px 7px;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:all .15s;line-height:1}
+.msg-reply:hover{border-color:var(--green);color:var(--green);background:rgba(35,209,139,.1)}
+
+/* ═══ EDIT INLINE ═══ */
+.msg-edit-zone{display:none;margin-top:6px}
+.msg-edit-zone.show{display:flex;gap:6px;align-items:flex-end}
+.msg-edit-ta{flex:1;background:var(--s2);border:1.5px solid var(--acc);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 10px;resize:none;outline:none;line-height:1.5;min-height:34px;max-height:120px}
+.msg-edit-actions{display:flex;gap:4px;flex-shrink:0}
+.msg-save-btn{background:var(--acc);border:none;border-radius:5px;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:5px 10px;cursor:pointer;transition:all .15s}
+.msg-save-btn:hover{background:var(--acc-h)}
+.msg-cancel-btn{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 10px;cursor:pointer;transition:all .15s}
+.msg-cancel-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ═══ REPLY BAR ═══ */
+#reply-bar{display:none;align-items:center;gap:8px;background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);border-radius:6px;padding:5px 10px;margin-bottom:6px;font-size:11px}
+#reply-bar.show{display:flex}
+#reply-bar .rb-label{color:var(--muted);flex-shrink:0}
+#reply-bar .rb-author{color:#a5adfe;font-weight:600;flex-shrink:0}
+#reply-bar .rb-preview{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+#reply-bar .rb-close{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;margin-left:auto;flex-shrink:0;transition:color .15s}
+#reply-bar .rb-close:hover{color:var(--red)}
+
+/* ═══ EMBED BUILDER ═══ */
+#embed-toggle{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;cursor:pointer;transition:all .15s;white-space:nowrap}
+#embed-toggle:hover,#embed-toggle.active{border-color:var(--acc);color:var(--acc);background:rgba(88,101,242,.1)}
+#embed-builder{display:none;background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;margin-bottom:8px;display:none;flex-direction:column;gap:8px}
+#embed-builder.show{display:flex}
+.eb-row{display:grid;gap:7px}
+.eb-2{grid-template-columns:1fr 1fr}
+.eb-3{grid-template-columns:1fr 1fr 1fr}
+.eb-label{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
+.eb-input,.eb-ta{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;transition:border-color .15s}
+.eb-input:focus,.eb-ta:focus{border-color:var(--acc)}
+.eb-ta{resize:none;min-height:44px;line-height:1.5}
+.eb-color-wrap{display:flex;gap:6px;align-items:center}
+.eb-color{width:32px;height:28px;border:1px solid var(--border);border-radius:5px;padding:0;cursor:pointer;background:none}
+.eb-color-hex{flex:1}
+.eb-preview-bar{height:4px;border-radius:2px;margin-top:2px;transition:background .2s}
+.eb-section{font-size:9.5px;color:var(--muted);font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 0 2px;border-top:1px solid var(--border);margin-top:2px}
+.eb-field-row{display:flex;flex-direction:column;gap:4px}
+.eb-fields-list{display:flex;flex-direction:column;gap:5px;max-height:130px;overflow-y:auto}
+.eb-field-item{display:grid;grid-template-columns:1fr 1fr auto auto;gap:5px;align-items:end}
+.eb-field-inline{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text)}
+.eb-field-inline input{accent-color:var(--acc)}
+.eb-rm-field{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);width:24px;height:24px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.eb-rm-field:hover{border-color:var(--red);color:var(--red)}
+.eb-add-field{background:none;border:1px dashed var(--border);border-radius:5px;color:var(--muted);font-size:10px;font-family:'IBM Plex Mono',monospace;padding:4px;cursor:pointer;width:100%;transition:all .15s;margin-top:2px}
+.eb-add-field:hover{border-color:var(--acc);color:var(--acc)}
+.eb-clear{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 8px;cursor:pointer;transition:all .15s}
+.eb-clear:hover{border-color:var(--red);color:var(--red)}
+
+/* ═══ AUTO-REFRESH ═══ */
+#autorefresh-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+#autorefresh-wrap select{background:var(--s2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 5px;outline:none;cursor:pointer}
+#autorefresh-wrap select:focus{border-color:var(--acc)}
+.ar-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background .3s}
+.ar-dot.active{background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ═══ TEMPLATES ═══ */
+#tpl-btn{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;cursor:pointer;transition:all .15s;white-space:nowrap}
+#tpl-btn:hover{border-color:var(--acc);color:var(--acc)}
+#tpl-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:0;background:var(--s2);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:280px;z-index:300;overflow:hidden}
+#tpl-dropdown.show{display:block}
+.tpl-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--muted)}
+.tpl-save-row{display:flex;gap:5px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.tpl-save-input{flex:1;background:var(--s3);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 7px;outline:none}
+.tpl-save-input:focus{border-color:var(--acc)}
+.tpl-save-btn{background:var(--acc);border:none;border-radius:4px;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+.tpl-list{max-height:180px;overflow-y:auto}
+.tpl-list::-webkit-scrollbar{width:3px}
+.tpl-list::-webkit-scrollbar-thumb{background:var(--border)}
+.tpl-item{display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.04)}
+.tpl-item:hover{background:var(--s3)}
+.tpl-item-name{flex:1;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpl-item-type{font-size:9px;background:rgba(88,101,242,.15);color:#a5adfe;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.tpl-item-rm{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0 2px;transition:color .12s;flex-shrink:0}
+.tpl-item-rm:hover{color:var(--red)}
+.tpl-empty{padding:12px;font-size:10px;color:var(--muted);text-align:center}
+.tpl-wrap{position:relative;flex-shrink:0}
+
+/* ═══ COMPONENTS V2 BUILDER ═══ */
+#comp-panel{display:none}
+#comp-panel.show{display:block}
+.cf{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.cf-toolbar{display:flex;flex-wrap:wrap;gap:5px}
+.cf-add-btn{padding:5px 11px;border:1.5px dashed var(--border);border-radius:6px;background:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.cf-add-btn:hover{border-color:var(--acc);color:var(--acc)}
+#comp-blocks{display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto;padding-right:2px}
+#comp-blocks:empty::after{content:'Aucun bloc — utilisez les boutons ci-dessus';font-size:10px;color:var(--muted);text-align:center;padding:14px 0;display:block}
+#comp-blocks::-webkit-scrollbar{width:3px}
+#comp-blocks::-webkit-scrollbar-thumb{background:var(--border)}
+.cb{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;transition:border-color .15s}
+.cb:hover{border-color:rgba(88,101,242,.4)}
+.cb-head{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;color:var(--muted)}
+.cb-title{flex:1;font-size:10px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+.cb-badge{font-size:9px;background:rgba(88,101,242,.18);color:#a5adfe;padding:1px 6px;border-radius:3px;font-weight:400}
+.cb-btns{display:flex;gap:3px;flex-shrink:0}
+.cb-ctrl{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);width:22px;height:22px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cb-ctrl:hover{border-color:var(--acc);color:var(--acc)}
+.cb-ctrl.del:hover{border-color:var(--red);color:var(--red)}
+.cb-ctrl:disabled{opacity:.3;cursor:not-allowed}
+.cb-field{display:flex;flex-direction:column;gap:3px}
+.cb-label{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.cb-input,.cb-select,.cb-textarea{background:var(--s2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;transition:border-color .15s;width:100%}
+.cb-input:focus,.cb-select:focus,.cb-textarea:focus{border-color:var(--acc)}
+.cb-textarea{resize:none;min-height:44px;line-height:1.5}
+.cb-row{display:grid;gap:7px}
+.cb-row-2{grid-template-columns:1fr 1fr}
+.cb-row-3{grid-template-columns:1fr 1fr 1fr}
+.cb-check{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text);cursor:pointer;user-select:none}
+.cb-check input{accent-color:var(--acc);width:13px;height:13px;cursor:pointer}
+/* input invalide */
+.cb-input.input-err{border-color:var(--red)!important;background:rgba(240,71,71,.07)}
+.cb-url-hint{font-size:9px;color:var(--red);margin-top:2px}
+.cb-btn-list{display:flex;flex-direction:column;gap:5px}
+.cb-btn-row{display:grid;grid-template-columns:1fr 90px 1fr auto;gap:5px;align-items:end}
+.cb-btn-style{padding:4px 6px;font-size:10px}
+.cb-btn-rm{background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;align-self:end;transition:all .15s;flex-shrink:0}
+.cb-btn-rm:hover{border-color:var(--red);color:var(--red)}
+.cb-add-btn-row{background:none;border:1px dashed var(--border);border-radius:5px;color:var(--muted);font-size:10px;font-family:'IBM Plex Mono',monospace;padding:4px;cursor:pointer;width:100%;transition:all .15s}
+.cb-add-btn-row:hover{border-color:var(--acc);color:var(--acc)}
+.cb-add-btn-row:disabled{opacity:.3;cursor:not-allowed}
+/* Options bas */
+.cf-opts{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cf-sep-line{height:1px;background:var(--border);flex:1}
+/* Preview JSON */
+.cf-preview{background:var(--s3);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.cf-preview summary{font-size:10px;color:var(--muted);padding:6px 10px;cursor:pointer;user-select:none;transition:color .15s}
+.cf-preview summary:hover{color:var(--text)}
+#comp-json-pre{margin:0;padding:8px 10px;font-size:9.5px;color:var(--green);background:none;overflow-x:auto;border-top:1px solid var(--border);max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+/* Send components btn */
+.cf-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#send-comp-btn{background:linear-gradient(135deg,#7289da,var(--acc));border:none;border-radius:7px;color:#fff;padding:9px 22px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:8px}
+#send-comp-btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 4px 16px rgba(88,101,242,.35)}
+#send-comp-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+#comp-hint{font-size:9.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🐰 Bot<span>Speaker</span></div>
+  <div id="token-wrap">
+    <input type="password" id="token-input" placeholder="Token du bot Discord…" autocomplete="off"/>
+    <button class="btn btn-acc" id="connect-btn" onclick="connect()">Connecter</button>
+    <button class="btn btn-ghost" id="dc-btn" style="display:none" onclick="disconnect()">Déconnecter</button>
+  </div>
+  <div id="bot-pill">
+    <div id="pill-av">🤖</div>
+    <span id="pill-name">—</span>
+    <div class="pill-dot"></div>
+  </div>
+</header>
+
+<div id="layout">
+  <div id="sidebar">
+    <div class="sb-label">Serveurs</div>
+    <div class="sb-scroll" id="server-list"><div class="empty" style="padding:24px 0;font-size:10px">Connectez le bot</div></div>
+    <div id="channels-block">
+      <div class="sb-label">Salons</div>
+      <div class="sb-scroll" id="channel-list" style="max-height:220px"><div style="padding:10px 12px;font-size:10px;color:var(--muted)">Choisissez un serveur</div></div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="chan-bar">
+      <span class="hash">#</span><span id="chan-title">Aucun salon</span>
+      <button id="refresh" onclick="loadMessages()" style="display:none">↻ Rafraîchir</button>
+      <div id="autorefresh-wrap" style="display:none">
+        <div class="ar-dot" id="ar-dot"></div>
+        <select id="ar-select" onchange="setAutoRefresh(this.value)" title="Auto-refresh">
+          <option value="0">Manuel</option>
+          <option value="15">15s</option>
+          <option value="30" selected>30s</option>
+          <option value="60">1 min</option>
+          <option value="120">2 min</option>
+        </select>
+      </div>
+      <div id="limit-badge">
+        <div class="limit-dot tier0" id="limit-dot"></div>
+        <span id="limit-text">25 MB max</span>
+      </div>
+    </div>
+
+<!-- Error modal fichier trop gros -->
+<div id="err-modal">
+  <div class="err-box">
+    <h3>⚠️ Fichier(s) trop volumineux</h3>
+    <p>Les fichiers suivants dépassent la limite autorisée par Discord pour ce serveur :</p>
+    <div class="err-files" id="err-files-list"></div>
+    <p class="err-tier">Limite actuelle du serveur : <strong id="err-limit-label" style="color:var(--text)">25 MB</strong> <span id="err-tier-info" style="color:var(--muted)"></span></p>
+    <div class="boost-levels">
+      <div class="boost-row" id="bl0"><span>Niveau 0</span><span>25 MB</span></div>
+      <div class="boost-row" id="bl1"><span>Niveau 1 (2 boosts)</span><span>50 MB</span></div>
+      <div class="boost-row" id="bl2"><span>Niveau 2 (7 boosts)</span><span>100 MB</span></div>
+      <div class="boost-row" id="bl3"><span>Niveau 3 (14 boosts)</span><span>500 MB</span></div>
+    </div>
+    <button class="err-close" onclick="document.getElementById('err-modal').classList.remove('show')">Fermer</button>
+  </div>
+</div>
+    <div id="messages"><div class="empty"><div class="ico">💬</div>Connectez votre bot et sélectionnez un salon</div></div>
+
+    <div id="input-zone">
+      <div id="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('msg')">💬 Message</button>
+        <button class="mode-tab" onclick="setMode('poll')">📊 Sondage</button>
+        <button class="mode-tab" onclick="setMode('comp')">🧩 Composants</button>
+      </div>
+
+      <!-- Message panel -->
+      <div id="msg-panel">
+        <!-- Reply bar -->
+        <div id="reply-bar">
+          <span class="rb-label">↩ Répondre à</span>
+          <span class="rb-author" id="rb-author"></span>
+          <span class="rb-preview" id="rb-preview"></span>
+          <button class="rb-close" onclick="clearReply()">✕</button>
+        </div>
+        <!-- Embed builder -->
+        <div id="embed-builder">
+          <div class="eb-row eb-2">
+            <div><div class="eb-label">Titre</div><input class="eb-input" id="eb-title" type="text" maxlength="256" placeholder="Titre de l'embed" oninput="updateEmbedPreview()"/></div>
+            <div>
+              <div class="eb-label">Couleur</div>
+              <div class="eb-color-wrap">
+                <input class="eb-color" id="eb-color-picker" type="color" value="#5865f2" oninput="syncEmbedColor(this.value)"/>
+                <input class="eb-input eb-color-hex" id="eb-color-hex" type="text" maxlength="7" placeholder="#5865f2" value="#5865f2" oninput="syncEmbedColorHex(this.value)"/>
+              </div>
+              <div class="eb-preview-bar" id="eb-preview-bar" style="background:#5865f2"></div>
+            </div>
+          </div>
+          <div><div class="eb-label">Description</div><textarea class="eb-ta" id="eb-desc" rows="2" placeholder="Description (Markdown supporté)" oninput="updateEmbedPreview()"></textarea></div>
+          <div class="eb-row eb-3">
+            <div><div class="eb-label">URL du titre</div><input class="eb-input" id="eb-url" type="text" placeholder="https://…" oninput="updateEmbedPreview()"/></div>
+            <div><div class="eb-label">Image (URL)</div><input class="eb-input" id="eb-image" type="text" placeholder="https://…/image.png" oninput="updateEmbedPreview()"/></div>
+            <div><div class="eb-label">Thumbnail (URL)</div><input class="eb-input" id="eb-thumb" type="text" placeholder="https://…/thumb.png" oninput="updateEmbedPreview()"/></div>
+          </div>
+          <div class="eb-row eb-2">
+            <div><div class="eb-label">Auteur</div><input class="eb-input" id="eb-author" type="text" maxlength="256" placeholder="Nom de l'auteur" oninput="updateEmbedPreview()"/></div>
+            <div><div class="eb-label">Footer</div><input class="eb-input" id="eb-footer" type="text" maxlength="2048" placeholder="Texte du footer" oninput="updateEmbedPreview()"/></div>
+          </div>
+          <div>
+            <div class="eb-section">Champs</div>
+            <div class="eb-fields-list" id="eb-fields"></div>
+            <button class="eb-add-field" onclick="addEmbedField()">+ Ajouter un champ (max 25)</button>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><button class="eb-clear" onclick="clearEmbed()">✕ Vider l'embed</button></div>
+        </div>
+        <div id="previews"></div>
+        <div id="composer">
+          <textarea id="msg-input" placeholder="Écrire un message…" rows="1" oninput="onType()" onkeydown="onKey(event)"></textarea>
+          <div class="composer-btns">
+            <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Ajouter des fichiers">📎<span id="file-count"></span></button>
+            <input type="file" id="file-input" multiple accept="*/*" onchange="onFiles(event)"/>
+            <button id="send-btn" onclick="sendMsg()" disabled>➤</button>
+          </div>
+        </div>
+        <div id="footer-info">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span id="file-info"></span>
+            <button id="embed-toggle" onclick="toggleEmbed()">🎨 Embed</button>
+            <div class="tpl-wrap">
+              <button id="tpl-btn" onclick="toggleTplDropdown()">📋 Templates</button>
+              <div id="tpl-dropdown">
+                <div class="tpl-header"><span>📋 Templates</span><span id="tpl-count">0 sauvegardé(s)</span></div>
+                <div class="tpl-save-row">
+                  <input class="tpl-save-input" id="tpl-name-input" type="text" placeholder="Nom du template…" maxlength="40"/>
+                  <button class="tpl-save-btn" onclick="saveTemplate()">Sauvegarder</button>
+                </div>
+                <div class="tpl-list" id="tpl-list"><div class="tpl-empty">Aucun template sauvegardé</div></div>
+              </div>
+            </div>
+          </div>
+          <span id="char-ctr">0 / 2000</span>
+        </div>
+      </div>
+
+      <!-- Poll panel -->
+      <div id="poll-panel">
+        <div class="pf">
+
+          <!-- Question -->
+          <div>
+            <div class="pf-section-label">Question</div>
+            <textarea class="ans-input" id="poll-q" rows="1" placeholder="Posez votre question… (300 car. max)" maxlength="300" oninput="onPollQInput()" style="width:100%;border-radius:7px;padding:9px 12px;resize:none;min-height:38px"></textarea>
+            <div class="q-counter" id="q-ctr">0 / 300</div>
+          </div>
+
+          <!-- Answers -->
+          <div>
+            <div class="pf-section-label" style="display:flex;justify-content:space-between">
+              <span>Réponses</span>
+              <span id="ans-count" style="color:var(--acc);font-size:9.5px">2 / 10</span>
+            </div>
+            <div id="answers-list"></div>
+            <button id="add-answer" onclick="addAnswer()">+ Ajouter une réponse (max 10)</button>
+          </div>
+
+          <!-- Options -->
+          <div class="pf-options">
+            <!-- Duration -->
+            <div class="pf-field">
+              <label>⏱ Durée</label>
+              <select class="pf-select" id="poll-dur">
+                <option value="1">1 heure</option>
+                <option value="4">4 heures</option>
+                <option value="8">8 heures</option>
+                <option value="24" selected>24 heures</option>
+                <option value="72">3 jours</option>
+                <option value="168">1 semaine</option>
+              </select>
+            </div>
+            <!-- Multiselect -->
+            <div class="pf-field">
+              <label>🗳 Choix multiple</label>
+              <div class="pf-toggle-wrap">
+                <div class="pf-toggle-label">
+                  Autoriser plusieurs réponses
+                  <span class="pf-toggle-sub">Les membres pourront voter<br>pour plusieurs options</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="poll-multi"/>
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom -->
+          <div class="pf-bottom">
+            <div id="ans-hint">Réponses remplies : <span id="ans-filled">0</span></div>
+            <button id="send-poll-btn" onclick="sendPoll()" disabled>📊 Publier le sondage</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Components V2 panel -->
+      <div id="comp-panel">
+        <div class="cf">
+          <!-- Toolbar -->
+          <div class="cf-toolbar">
+            <button class="cf-add-btn" onclick="addCompBlock('text')">📝 Texte</button>
+            <button class="cf-add-btn" onclick="addCompBlock('sep')">─ Séparateur</button>
+            <button class="cf-add-btn" onclick="addCompBlock('buttons')">🔘 Boutons</button>
+            <button class="cf-add-btn" onclick="addCompBlock('section')">📑 Section</button>
+          </div>
+          <!-- Block list -->
+          <div id="comp-blocks"></div>
+          <!-- Options -->
+          <div class="cf-opts">
+            <label class="cb-check"><input type="checkbox" id="comp-use-container" onchange="updateCompPreview()"> Container (bordure)</label>
+            <div class="cf-sep-line"></div>
+            <details class="cf-preview" style="flex:1">
+              <summary>Aperçu JSON</summary>
+              <pre id="comp-json-pre"></pre>
+            </details>
+          </div>
+          <!-- Bottom -->
+          <div class="cf-bottom">
+            <div id="comp-hint" style="font-size:9.5px;color:var(--muted)">0 bloc</div>
+            <button id="send-comp-btn" onclick="sendComponents()" disabled>🧩 Envoyer les composants</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji picker -->
+<div id="emoji-picker">
+  <input class="ep-search" type="text" placeholder="Rechercher un emoji…" oninput="filterEmojis(this.value)"/>
+  <div class="ep-cats" id="ep-cats"></div>
+  <div class="ep-grid" id="ep-grid"></div>
+  <button class="ep-remove" onclick="removeEmoji()">✕ Retirer l'emoji</button>
+</div>
+
+<div id="lightbox" onclick="this.classList.remove('show')"><img id="lb-img" src="" alt=""/></div>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// EMOJI DATA  (catégories identiques à Discord)
+// ════════════════════════════════════════════════
+const EMOJI_CATS = [
+  { label:'😀', name:'Visages',   emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','💫','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'] },
+  { label:'👋', name:'Gestes',    emojis:['👋','🤚','🖐','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁','👅','👄','💋'] },
+  { label:'❤️', name:'Cœurs',     emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉','✡️','🔯','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🔕','🔇'] },
+  { label:'🎉', name:'Fête',      emojis:['🎉','🎊','🎈','🎁','🎀','🎗','🎟','🎫','🏆','🥇','🥈','🥉','🏅','🎖','🏵','🎪','🤹','🎭','🩰','🎨','🖼','🎬','🎤','🎧','🎼','🎵','🎶','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟','🎯','🎳','🎮','🕹','🧩','🪀','🪁','🃏','🀄','🎴'] },
+  { label:'🐱', name:'Animaux',   emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿','🦔'] },
+  { label:'🍕', name:'Nourriture', emojis:['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶','🫑','🧄','🧅','🥔','🍠','🫘','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟','🍕','🫓','🥪','🥙','🧆','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧃','🥤','🧋','☕','🍵','🧊'] },
+  { label:'⚽', name:'Sport',     emojis:['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸','🥌','🎿','⛷','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖'] },
+  { label:'🚀', name:'Objets',    emojis:['🚀','🛸','🌍','🌎','🌏','🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘','🌙','🌚','🌛','🌜','🌝','🌞','🪐','⭐','🌟','💫','⚡','☄️','💥','🔥','🌈','☀️','🌤','⛅','🌥','☁️','🌦','🌧','⛈','🌩','🌨','❄️','💨','🌊','💧','🌱','🌿','☘️','🍀','🎋','🍃','🌺','🌸','🌼','🌻','🌹','🥀','🌷','🍄','🐚','🪨','🌾','💐','🌵','🎄','🌲','🌳','🌴','🪵','💎','🔮','🧿','🪬','🏺','🪆','🗿','🗽','🗼','🏰','🎠','🎡','🎢','🎪','🎭','🎨','🖼','🎬','🎤','🎧','🎼','🎵','🎶','📱','💻','⌨️','🖥','🖨','🖱','💾','💿','📀','📷','📸','📹','🎥','🔭','🔬','💡','🔦','🕯'] },
+  { label:'✅', name:'Symboles',  emojis:['✅','❎','🆗','🆙','🆒','🆕','🆓','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔷','🔶','🔹','🔸','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔉','🔊','📢','📣','🔔','🔕','🎵','🎶','⁉️','❓','❔','❕','❗','⚠️','🚸','🔞','♻️','✔️','💠','🔱','📛','🔰','⭕','✖️','➕','➖','➗','⚙️','🔧','🔨','⚒','🛠','🔩','🔗','📌','📍','📋','✏️','✒️','🖊','🖋','📝','📖','📚'] },
+];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+const S = {
+  token:'', bot:null, connected:false,
+  guilds:[], channels:[], messages:[],
+  guildId:null, channelId:null,
+  files:[], mode:'msg', guildEmojis:[], guildLimit:{tier:0,limitBytes:25*1024*1024,limitLabel:'25 MB',boosts:0},
+  activeEmojiBtn:null,
+  replyTo:null,
+  embedFields:[],
+  compBlocks:[],
+};
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+(async () => {
+  buildPollAnswers();
+  renderEmojiCats();
+  renderEmojiGrid(EMOJI_CATS.flatMap(c => c.emojis));
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    if (cfg.token) {
+      document.getElementById('token-input').value = cfg.token;
+      S.token = cfg.token;
+      const ok = await connect(true);
+      if (ok && cfg.guildId) {
+        await selectGuild(cfg.guildId, true);
+        if (cfg.channelId) await selectChannel(cfg.channelId, true);
+      }
+    }
+  } catch {}
+  // Fermer le picker si clic ailleurs
+  document.addEventListener('click', e => {
+    const picker = document.getElementById('emoji-picker');
+    if (picker.classList.contains('show') && !picker.contains(e.target) && !e.target.closest('.emoji-btn')) {
+      picker.classList.remove('show');
+      S.activeEmojiBtn = null;
+    }
+    const tplDd = document.getElementById('tpl-dropdown');
+    if (tplDd.classList.contains('show') && !tplDd.contains(e.target) && !e.target.closest('#tpl-btn')) {
+      tplDd.classList.remove('show');
+    }
+  });
+})();
+
+// ════════════════════════════════════════════════
+// MODE TABS
+// ════════════════════════════════════════════════
+function setMode(m) {
+  S.mode = m;
+  document.querySelectorAll('.mode-tab').forEach((t, i) => t.classList.toggle('active', (i===0&&m==='msg')||(i===1&&m==='poll')||(i===2&&m==='comp')));
+  document.getElementById('msg-panel').style.display = m==='msg' ? '' : 'none';
+  document.getElementById('poll-panel').classList.toggle('show', m==='poll');
+  document.getElementById('comp-panel').classList.toggle('show', m==='comp');
+  if (m==='comp') updateCompPreview();
+}
+
+// ════════════════════════════════════════════════
+// CONNECT / DISCONNECT
+// ════════════════════════════════════════════════
+async function connect(silent=false) {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) { toast('Entrez un token','err'); return false; }
+  S.token = token;
+  const btn = document.getElementById('connect-btn');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await fetch(`/api/me?token=${encodeURIComponent(token)}`);
+    const bot = await r.json();
+    if (!r.ok) throw bot;
+    S.bot = bot; S.connected = true;
+    const pill = document.getElementById('bot-pill'); pill.classList.add('show');
+    const av = document.getElementById('pill-av');
+    if (bot.avatar) av.innerHTML = `<img src="https://cdn.discordapp.com/avatars/${bot.id}/${bot.avatar}.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover" alt=""/>`;
+    document.getElementById('pill-name').textContent = bot.username;
+    document.getElementById('connect-btn').style.display = 'none';
+    document.getElementById('dc-btn').style.display = '';
+    document.getElementById('token-input').disabled = true;
+    const guilds = await (await fetch(`/api/guilds?token=${encodeURIComponent(token)}`)).json();
+    S.guilds = guilds; renderGuilds(guilds);
+    await saveCfg();
+    if (!silent) toast(`Connecté : ${bot.username}`, 'ok');
+    return true;
+  } catch(e) {
+    toast('Token invalide', 'err');
+    btn.disabled = false; btn.textContent = 'Connecter';
+    return false;
+  }
+}
+
+function disconnect() {
+  Object.assign(S, {token:'',bot:null,connected:false,guilds:[],channels:[],messages:[],guildId:null,channelId:null,files:[],replyTo:null,embedFields:[],compBlocks:[]});
+  clearInterval(_arTimer); _arTimer = null;
+  document.getElementById('token-input').value=''; document.getElementById('token-input').disabled=false;
+  document.getElementById('connect-btn').style.display=''; document.getElementById('connect-btn').disabled=false; document.getElementById('connect-btn').textContent='Connecter';
+  document.getElementById('dc-btn').style.display='none';
+  document.getElementById('bot-pill').classList.remove('show');
+  document.getElementById('server-list').innerHTML='<div class="empty" style="padding:24px 0;font-size:10px">Connectez le bot</div>';
+  document.getElementById('channel-list').innerHTML='<div style="padding:10px 12px;font-size:10px;color:var(--muted)">Choisissez un serveur</div>';
+  document.getElementById('chan-title').textContent='Aucun salon';
+  document.getElementById('refresh').style.display='none';
+  document.getElementById('autorefresh-wrap').style.display='none';
+  document.getElementById('ar-dot').classList.remove('active');
+  document.getElementById('send-btn').disabled=true;
+  document.getElementById('send-poll-btn').disabled=true;
+  document.getElementById('reply-bar').classList.remove('show');
+  showEmpty(); clearPreviews();
+  fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}' });
+  toast('Déconnecté');
+}
+
+// ════════════════════════════════════════════════
+// GUILDS / CHANNELS
+// ════════════════════════════════════════════════
+function renderGuilds(guilds) {
+  const el = document.getElementById('server-list');
+  if (!guilds.length) { el.innerHTML='<div class="empty" style="padding:20px 0;font-size:10px">Aucun serveur</div>'; return; }
+  el.innerHTML = guilds.map(g => {
+    const ico = g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" alt=""/>` : g.name[0].toUpperCase();
+    return `<div class="server-item" id="g-${g.id}" onclick="selectGuild('${g.id}')"><div class="srv-ico">${ico}</div><span class="srv-name">${esc(g.name)}</span></div>`;
+  }).join('');
+}
+async function selectGuild(id, silent=false) {
+  document.querySelectorAll('.server-item').forEach(e => e.classList.remove('active'));
+  document.getElementById(`g-${id}`)?.classList.add('active');
+  S.guildId=id; S.channelId=null;
+  document.getElementById('channel-list').innerHTML='<div style="padding:10px 12px;font-size:10px;color:var(--muted)">Chargement…</div>';
+  try {
+    const resp = await (await fetch(`/api/channels?token=${encodeURIComponent(S.token)}&guildId=${id}`)).json();
+    const rawChannels = Array.isArray(resp) ? resp : (resp.channels || []);
+    const channels = rawChannels.filter(c=>c.type===0||c.type===5).sort((a,b)=>a.position-b.position);
+    S.channels = channels;
+    const el = document.getElementById('channel-list');
+    if (!channels.length) { el.innerHTML='<div style="padding:10px 12px;font-size:10px;color:var(--muted)">Aucun salon texte</div>'; return; }
+    el.innerHTML = channels.map(c=>`<div class="chan-item" id="c-${c.id}" onclick="selectChannel('${c.id}')"><span style="color:var(--muted);font-size:13px">#</span><span class="chan-name">${esc(c.name)}</span></div>`).join('');
+    // Charger les emojis du serveur
+    try {
+      const emojis = await (await fetch(`/api/emojis?token=${encodeURIComponent(S.token)}&guildId=${id}`)).json();
+      S.guildEmojis = Array.isArray(emojis) ? emojis : [];
+    } catch { S.guildEmojis = []; }
+    refreshEmojiServerCat();
+    // Charger la limite de fichier du serveur
+    try {
+      const lim = await (await fetch(`/api/guild-limit?token=${encodeURIComponent(S.token)}&guildId=${id}`)).json();
+      S.guildLimit = lim;
+      updateLimitBadge();
+    } catch { S.guildLimit = {tier:0,limitBytes:25*1024*1024,limitLabel:'25 MB',boosts:0}; }
+    if (!silent) await saveCfg();
+  } catch { document.getElementById('channel-list').innerHTML='<div style="padding:10px 12px;font-size:10px;color:var(--red)">Erreur</div>'; }
+}
+async function selectChannel(id, silent=false) {
+  document.querySelectorAll('.chan-item').forEach(e => e.classList.remove('active'));
+  document.getElementById(`c-${id}`)?.classList.add('active');
+  S.channelId = id;
+  const chan = S.channels.find(c=>c.id===id);
+  document.getElementById('chan-title').textContent = chan ? chan.name : id;
+  document.getElementById('refresh').style.display='';
+  document.getElementById('autorefresh-wrap').style.display='';
+  document.getElementById('msg-input').placeholder=`Écrire dans #${chan?.name||id}…`;
+  checkPollSendable(); onType();
+  if (!silent) await saveCfg();
+  // Relancer auto-refresh sur le nouveau salon
+  const arSec = document.getElementById('ar-select').value;
+  setAutoRefresh(arSec);
+  await loadMessages();
+  loadTemplates();
+}
+async function saveCfg() {
+  await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:S.token,guildId:S.guildId,channelId:S.channelId})});
+}
+
+// ════════════════════════════════════════════════
+// MESSAGES
+// ════════════════════════════════════════════════
+async function loadMessages(silent = false) {
+  if (!S.channelId) return;
+  const c = document.getElementById('messages');
+  if (!silent) c.innerHTML='<div class="empty"><div style="font-size:24px;opacity:.2">⏳</div>Chargement…</div>';
+  try {
+    const r = await fetch(`/api/messages?token=${encodeURIComponent(S.token)}&channelId=${S.channelId}`);
+    const msgs = await r.json();
+    if (!r.ok) throw msgs;
+    S.messages = [...msgs].reverse();
+    renderMessages();
+  } catch(e) {
+    c.innerHTML=`<div class="empty"><div class="ico">🔒</div>${e.code===50013?'Permission manquante':'Impossible de charger'}</div>`;
+  }
+}
+
+function renderMessages() {
+  const c = document.getElementById('messages');
+  if (!S.messages.length) { c.innerHTML='<div class="empty"><div class="ico">🔇</div>Aucun message</div>'; return; }
+  c.innerHTML = S.messages.map(m => {
+    const isMe = m.author.id === S.bot?.id;
+    const avUrl = m.author.avatar ? `https://cdn.discordapp.com/avatars/${m.author.id}/${m.author.avatar}.png` : null;
+    const avHtml = avUrl ? `<img src="${avUrl}" alt=""/>` : (isMe?'🤖':'👤');
+    const time = new Date(m.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const imgs = (m.attachments||[]).filter(a=>a.content_type?.startsWith('image')||/\.(png|jpg|jpeg|gif|webp)$/i.test(a.filename));
+    const vids = (m.attachments||[]).filter(a=>a.content_type?.startsWith('video')||/\.(mp4|webm|mov|avi|mkv)$/i.test(a.filename));
+    const others = (m.attachments||[]).filter(a=>!imgs.includes(a)&&!vids.includes(a));
+    const imgsHtml = imgs.map(a=>`<img src="${a.url}" alt="${esc(a.filename)}" loading="lazy" onclick="openLb('${a.url}')"/>`).join('');
+    const vidsHtml = vids.map(a => {
+      const sizeMB = a.size ? (a.size/1024/1024).toFixed(1)+'MB' : '';
+      const ext = (a.filename||'').split('.').pop().toUpperCase();
+      const isWebCompatible = /^(MP4|WEBM|OGG|MOV)$/i.test(ext);
+      // ── Proxy local : contourne CORS/MIME/expiration CDN Discord sur Waterfox ──
+      const proxyUrl = `/api/video-proxy?url=${encodeURIComponent(a.url)}`;
+      if (isWebCompatible) {
+        return `<div style="display:inline-block;max-width:320px;vertical-align:top">
+          <video controls preload="metadata" src="${proxyUrl}"
+            style="max-width:320px;max-height:200px;border-radius:6px;border:1px solid var(--border);display:block;background:#000"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          </video>
+          <a href="${a.url}" target="_blank" rel="noopener"
+            style="display:none;align-items:center;gap:10px;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:10px 14px;text-decoration:none;color:var(--text);font-size:11px;max-width:320px">
+            <span style="font-size:22px">🎬</span>
+            <div>
+              <div style="font-weight:600">${esc(a.filename)}</div>
+              <div style="color:var(--muted);font-size:10px">${sizeMB} · Ouvrir dans le navigateur</div>
+            </div>
+          </a>
+          <div style="font-size:9px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:6px">
+            <span>${esc(a.filename)}</span>
+            ${sizeMB?`<span>· ${sizeMB}</span>`:''}
+            <a href="${a.url}" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;font-size:9px">↗ Ouvrir</a>
+          </div>
+        </div>`;
+      } else {
+        // Format non supporté (AVI, MKV…) → lien direct
+        return `<a href="${a.url}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:10px;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:10px 14px;text-decoration:none;color:var(--text);font-size:11px;max-width:300px;transition:border-color .15s"
+          onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:22px">🎬</span>
+          <div>
+            <div style="font-weight:600;font-size:11px">${esc(a.filename)}</div>
+            <div style="color:var(--muted);font-size:10px">${sizeMB} · ${ext} — Télécharger / Ouvrir</div>
+            <div style="color:var(--yellow);font-size:9px;margin-top:2px">⚠ Format non lisible dans le navigateur</div>
+          </div>
+          <span style="color:var(--acc);font-size:14px;margin-left:auto">↗</span>
+        </a>`;
+      }
+    }).join('');
+    const othersHtml = others.map(a=>`<div style="font-size:10px;color:var(--muted);margin-top:4px">📎 ${esc(a.filename)}</div>`).join('');
+
+    // Poll
+    let pollHtml = '';
+    if (m.poll) {
+      const p = m.poll;
+      const totalVotes = p.results?.answer_counts?.reduce((s,a)=>s+a.count,0)||0;
+      const answers = (p.answers||[]).map(a => {
+        const votes = p.results?.answer_counts?.find(r=>r.id===a.answer_id)?.count||0;
+        const pct = totalVotes>0 ? Math.round(votes/totalVotes*100) : 0;
+        const emoji = a.poll_media?.emoji?.name || '';
+        const text = esc(a.poll_media?.text||'');
+        return `<div class="poll-opt">
+          <span class="poll-opt-emoji">${emoji}</span>
+          <div class="poll-bar-wrap">
+            <div class="poll-bar" style="width:${pct}%"></div>
+            <span class="poll-bar-label">${text}</span>
+          </div>
+          <span class="poll-pct">${pct}%</span>
+        </div>`;
+      }).join('');
+      const expires = p.expiry ? `Expire ${new Date(p.expiry).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}` : '';
+      const finalized = p.results?.is_finalized;
+      const multi = p.allow_multiselect ? '· Choix multiple ' : '';
+      const endBtn = (!finalized&&isMe) ? `<button class="poll-end-btn" onclick="endPoll('${m.channel_id||S.channelId}','${m.id}')">⏹ Terminer</button>` : (finalized ? '<span style="color:var(--green);font-size:10px">✓ Terminé</span>' : '');
+      pollHtml = `<div class="poll-card">
+        <div class="poll-q"><span class="poll-q-ico">📊</span>${esc(p.question?.text||'Sondage')}</div>
+        ${answers}
+        <div class="poll-footer"><span>${totalVotes} vote${totalVotes>1?'s':''} ${multi}${expires?'· '+expires:''}</span>${endBtn}</div>
+      </div>`;
+    }
+
+    return `<div class="msg${isMe?' mine':''}">
+      <div class="m-av">${avHtml}</div>
+      <div class="m-body">
+        <div class="m-head">
+          <span class="m-author${isMe?' bot-name':''}">${esc(m.author.username)}</span>
+          ${m.author.bot?'<span class="m-tag">BOT</span>':''}
+          <span class="m-time">${time}</span>
+          <div class="msg-actions">
+            <button class="msg-reply" onclick="setReply('${m.id}','${esc(m.author.username)}','${esc((m.content||'').slice(0,60))}')" title="Répondre">↩</button>
+            ${isMe?`<button class="msg-edit" onclick="openEditZone('${m.id}')" title="Éditer">✏️</button>`:''}
+            <button class="msg-del" onclick="deleteMsg('${m.id}','${m.channel_id||S.channelId}')" title="Supprimer">🗑</button>
+          </div>
+        </div>
+        ${m.content?`<div class="m-text" id="mt-${m.id}">${esc(m.content)}</div>`:''}
+        <div class="msg-edit-zone" id="ez-${m.id}">
+          <textarea class="msg-edit-ta" id="eta-${m.id}" rows="1">${esc(m.content||'')}</textarea>
+          <div class="msg-edit-actions">
+            <button class="msg-save-btn" onclick="saveEdit('${m.id}','${m.channel_id||S.channelId}')">✓ Sauver</button>
+            <button class="msg-cancel-btn" onclick="closeEditZone('${m.id}')">✕</button>
+          </div>
+        </div>
+        ${pollHtml}
+        ${(imgsHtml||vidsHtml)?`<div class="m-imgs">${imgsHtml}${vidsHtml}</div>`:''}
+        ${othersHtml}
+      </div>
+    </div>`;
+  }).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+function showEmpty(){document.getElementById('messages').innerHTML='<div class="empty"><div class="ico">💬</div>Connectez votre bot et sélectionnez un salon</div>';}
+
+// ════════════════════════════════════════════════
+// SEND MESSAGE
+// ════════════════════════════════════════════════
+async function sendMsg() {
+  const content = document.getElementById('msg-input').value.trim();
+  if (!content && S.files.length===0) return;
+  if (!S.channelId) return;
+  if (content.length>2000) { toast('Message trop long','err'); return; }
+  document.getElementById('send-btn').disabled = true;
+  const fd = new FormData();
+  fd.append('token',S.token); fd.append('channelId',S.channelId);
+  if (S.guildId) fd.append('guildId',S.guildId);
+  if (content) fd.append('content',content);
+  if (S.replyTo) fd.append('replyTo', S.replyTo);
+  if (embedIsActive()) {
+    const embed = buildEmbed();
+    if (embed) fd.append('embeds', JSON.stringify([embed]));
+  }
+  S.files.forEach(f=>fd.append('files',f));
+  try {
+    const r = await fetch('/api/send',{method:'POST',body:fd});
+    const msg = await r.json();
+    if (!r.ok) { const err = msg; err.status = r.status; throw err; }
+    document.getElementById('msg-input').value=''; onType(); clearPreviews(); clearReply();
+    S.messages.push(msg); renderMessages();
+    toast('Envoyé !','ok');
+  } catch(e){
+    if (e.status===413||e.limitLabel) {
+      // Fichiers trop gros
+      document.getElementById('err-files-list').innerHTML = (e.files||[]).map(f=>`<div>📄 ${esc(f.name)} — <strong style="color:var(--red)">${f.sizeMB} MB</strong></div>`).join('') || e.detail || '';
+      document.getElementById('err-limit-label').textContent = e.limitLabel||S.guildLimit.limitLabel;
+      document.getElementById('err-tier-info').textContent = `(Niveau boost ${e.tier??S.guildLimit.tier})`;
+      [0,1,2,3].forEach(n=>document.getElementById('bl'+n).className='boost-row'+(n===(e.tier??S.guildLimit.tier)?' current':''));
+      document.getElementById('err-modal').classList.add('show');
+    } else {
+      toast(e.code===50013?'Permission refusée':'Erreur d\'envoi','err');
+    }
+  }
+  document.getElementById('send-btn').disabled = !S.channelId;
+}
+
+// ════════════════════════════════════════════════
+// SEND POLL
+// ════════════════════════════════════════════════
+async function sendPoll() {
+  if (!S.channelId) { toast('Sélectionnez un salon','err'); return; }
+  const question = document.getElementById('poll-q').value.trim();
+  const rows = document.querySelectorAll('#answers-list .ans-row');
+  const answers = Array.from(rows).map(row => ({
+    text: row.querySelector('.ans-input').value.trim(),
+    emoji: row.dataset.emoji || '',
+    emojiId: row.dataset.emojiId || '',
+  })).filter(a => a.text);
+  const duration = parseInt(document.getElementById('poll-dur').value)||24;
+  const allow_multiselect = document.getElementById('poll-multi').checked;
+  if (!question) { toast('Question requise','err'); return; }
+  if (answers.length<2) { toast('2 réponses minimum','err'); return; }
+  document.getElementById('send-poll-btn').disabled = true;
+  try {
+    const r = await fetch('/api/poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:S.token,channelId:S.channelId,question,answers,duration,allow_multiselect})});
+    const msg = await r.json();
+    if (!r.ok) throw msg;
+    S.messages.push(msg); renderMessages();
+    // Reset
+    document.getElementById('poll-q').value=''; onPollQInput();
+    buildPollAnswers();
+    toast('Sondage publié !','ok');
+  } catch(e){
+    console.error(e);
+    toast(e.message||'Erreur lors de la publication','err');
+  }
+  checkPollSendable();
+}
+
+async function endPoll(channelId, messageId) {
+  if (!confirm('Terminer ce sondage immédiatement ?')) return;
+  try {
+    const r = await fetch('/api/poll/end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:S.token,channelId,messageId})});
+    if (!r.ok) throw await r.json();
+    toast('Sondage terminé !','ok'); await loadMessages();
+  } catch(e){toast('Impossible de terminer','err');}
+}
+
+// ════════════════════════════════════════════════
+// POLL FORM — ANSWERS
+// ════════════════════════════════════════════════
+function buildPollAnswers(count=2) {
+  const list = document.getElementById('answers-list');
+  list.innerHTML='';
+  for (let i=0;i<count;i++) addAnswerRow(i+1);
+  updateAnsUI();
+}
+
+function addAnswer() {
+  const rows = document.querySelectorAll('#answers-list .ans-row');
+  if (rows.length>=10) return;
+  addAnswerRow(rows.length+1);
+  updateAnsUI();
+}
+
+function addAnswerRow(n) {
+  const list = document.getElementById('answers-list');
+  const div = document.createElement('div');
+  div.className='ans-row'; div.dataset.emoji=''; div.dataset.emojiId='';
+  div.innerHTML=`
+    <button class="emoji-btn" onclick="openEmojiPicker(this)" title="Choisir un emoji">
+      <span class="emoji-placeholder">🙂</span>
+    </button>
+    <input class="ans-input" type="text" placeholder="Réponse ${n}" maxlength="55" oninput="onAnsInput(this)"/>
+    <span class="ans-char">0/55</span>
+    <button class="rm-ans" onclick="removeAnswer(this)" style="visibility:hidden">✕</button>
+  `;
+  list.appendChild(div);
+}
+
+function removeAnswer(btn) {
+  const list = document.getElementById('answers-list');
+  if (list.querySelectorAll('.ans-row').length<=2) return;
+  btn.closest('.ans-row').remove();
+  // renumber placeholders
+  list.querySelectorAll('.ans-row .ans-input').forEach((inp,i)=>inp.placeholder=`Réponse ${i+1}`);
+  updateAnsUI();
+  checkPollSendable();
+}
+
+function onAnsInput(inp) {
+  const n = inp.value.length;
+  const ctr = inp.nextElementSibling;
+  ctr.textContent = `${n}/55`;
+  ctr.className = 'ans-char' + (n>45?' warn':'') + (n>=55?' over':'');
+  checkPollSendable();
+}
+
+function updateAnsUI() {
+  const rows = document.querySelectorAll('#answers-list .ans-row');
+  const n = rows.length;
+  document.getElementById('ans-count').textContent = `${n} / 10`;
+  document.getElementById('add-answer').disabled = n>=10;
+  rows.forEach(row => {
+    row.querySelector('.rm-ans').style.visibility = n<=2 ? 'hidden' : 'visible';
+  });
+  updateAnsFilled();
+}
+
+function updateAnsFilled() {
+  const filled = Array.from(document.querySelectorAll('#answers-list .ans-input')).filter(i=>i.value.trim()).length;
+  document.getElementById('ans-filled').textContent = filled;
+}
+
+function onPollQInput() {
+  const n = document.getElementById('poll-q').value.length;
+  const ctr = document.getElementById('q-ctr');
+  ctr.textContent = `${n} / 300`;
+  ctr.className = 'q-counter' + (n>250?' warn':'') + (n>=300?' over':'');
+  checkPollSendable();
+}
+
+function checkPollSendable() {
+  const q = document.getElementById('poll-q').value.trim();
+  const filled = Array.from(document.querySelectorAll('#answers-list .ans-input')).filter(i=>i.value.trim()).length;
+  updateAnsFilled();
+  document.getElementById('send-poll-btn').disabled = !(q && filled>=2 && S.channelId);
+}
+
+// ════════════════════════════════════════════════
+// EMOJI PICKER
+// ════════════════════════════════════════════════
+function renderEmojiCats() {
+  const el = document.getElementById('ep-cats');
+  const srvBtn = S.guildEmojis.length
+    ? `<button class="ep-cat" data-cat="__server__" onclick="filterByCat(this,'__server__')">🖥 Serveur (${S.guildEmojis.length})</button>`
+    : '';
+  el.innerHTML = `<button class="ep-cat active" data-cat="all" onclick="filterByCat(this,'all')">🔍 Tous</button>${srvBtn}` +
+    EMOJI_CATS.map(c=>`<button class="ep-cat" data-cat="${c.name}" onclick="filterByCat(this,'${c.name}')">${c.label}</button>`).join('');
+}
+
+function refreshEmojiServerCat() {
+  renderEmojiCats();
+  // Si la cat serveur était active, la rafraîchir
+  const active = document.querySelector('.ep-cat.active');
+  if (active && active.dataset.cat === '__server__') renderEmojiGrid([]);
+}
+
+function filterByCat(btn, cat) {
+  document.querySelectorAll('.ep-cat').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector('.ep-search').value='';
+  if (cat === '__server__') { renderServerEmojiGrid(S.guildEmojis); return; }
+  const emojis = cat==='all' ? EMOJI_CATS.flatMap(c=>c.emojis) : EMOJI_CATS.find(c=>c.name===cat)?.emojis||[];
+  renderEmojiGrid(emojis);
+}
+
+function renderEmojiGrid(emojis) {
+  document.getElementById('ep-grid').innerHTML = emojis.map(e=>
+    `<button class="ep-emoji" onclick="selectEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function renderServerEmojiGrid(emojis) {
+  if (!emojis.length) {
+    document.getElementById('ep-grid').innerHTML = '<div style="grid-column:1/-1;font-size:10px;color:var(--muted);padding:10px;text-align:center">Aucun emoji personnalisé sur ce serveur</div>';
+    return;
+  }
+  document.getElementById('ep-grid').innerHTML = emojis.map(e => {
+    const ext = e.animated ? 'gif' : 'png';
+    const url = `https://cdn.discordapp.com/emojis/${e.id}.${ext}?size=32`;
+    const safeId = e.id; const safeName = e.name.replace(/'/g,'');
+    return `<button class="ep-srv-emoji" onclick="selectServerEmoji('${safeId}','${safeName}','${ext}')" title=":${safeName}:">
+      <img src="${url}" alt="${safeName}" loading="lazy"/>
+    </button>`;
+  }).join('');
+}
+
+function filterEmojis(q) {
+  const activeCat = document.querySelector('.ep-cat.active')?.dataset?.cat;
+  if (!q) {
+    if (activeCat === '__server__') { renderServerEmojiGrid(S.guildEmojis); return; }
+    const emojis = (!activeCat||activeCat==='all') ? EMOJI_CATS.flatMap(c=>c.emojis) : EMOJI_CATS.find(c=>c.name===activeCat)?.emojis||[];
+    renderEmojiGrid(emojis); return;
+  }
+  const ql = q.toLowerCase();
+  // Cherche dans les emojis serveur par nom
+  const srvMatch = S.guildEmojis.filter(e => e.name.toLowerCase().includes(ql));
+  // Emojis unicode : pas de noms dispo facilement, on les garde tous
+  const stdAll = EMOJI_CATS.flatMap(c=>c.emojis);
+  if (srvMatch.length) {
+    // Montre d'abord les emojis serveur trouvés, puis les unicode
+    const grid = document.getElementById('ep-grid');
+    grid.innerHTML =
+      '<div class="ep-section-label">🖥 Serveur</div>' +
+      srvMatch.map(e=>{
+        const ext=e.animated?'gif':'png';
+        const url=`https://cdn.discordapp.com/emojis/${e.id}.${ext}?size=32`;
+        const safeId=e.id; const safeName=e.name.replace(/'/g,'');
+        return `<button class="ep-srv-emoji" onclick="selectServerEmoji('${safeId}','${safeName}','${ext}')" title=":${safeName}:"><img src="${url}" alt="${safeName}" loading="lazy"/></button>`;
+      }).join('') +
+      '<div class="ep-section-label">😀 Unicode</div>' +
+      stdAll.map(e=>`<button class="ep-emoji" onclick="selectEmoji('${e}')">${e}</button>`).join('');
+  } else {
+    renderEmojiGrid(stdAll);
+  }
+}
+
+function openEmojiPicker(btn) {
+  const picker = document.getElementById('emoji-picker');
+  S.activeEmojiBtn = btn;
+  const rect = btn.getBoundingClientRect();
+  let top = rect.top - 310;
+  if (top < 10) top = rect.bottom + 6;
+  picker.style.top = top + 'px';
+  picker.style.left = Math.min(rect.left, window.innerWidth - 290) + 'px';
+  picker.classList.add('show');
+  picker.querySelector('.ep-search').focus();
+}
+
+function selectEmoji(emoji) {
+  const btn = S.activeEmojiBtn;
+  if (!btn) return;
+  const row = btn.closest('.ans-row');
+  row.dataset.emoji = emoji;
+  row.dataset.emojiId = '';
+  btn.innerHTML = `<span style="font-size:18px">${emoji}</span>`;
+  document.getElementById('emoji-picker').classList.remove('show');
+  S.activeEmojiBtn = null;
+}
+
+function selectServerEmoji(id, name, ext) {
+  const btn = S.activeEmojiBtn;
+  if (!btn) return;
+  const row = btn.closest('.ans-row');
+  row.dataset.emoji = name;
+  row.dataset.emojiId = id;
+  const url = `https://cdn.discordapp.com/emojis/${id}.${ext}?size=32`;
+  btn.innerHTML = `<img src="${url}" alt="${name}" style="width:22px;height:22px;object-fit:contain;border-radius:3px"/>`;
+  document.getElementById('emoji-picker').classList.remove('show');
+  S.activeEmojiBtn = null;
+}
+
+function removeEmoji() {
+  const btn = S.activeEmojiBtn;
+  if (!btn) return;
+  const row = btn.closest('.ans-row');
+  row.dataset.emoji = ''; row.dataset.emojiId = '';
+  btn.innerHTML = '<span class="emoji-placeholder">🙂</span>';
+  document.getElementById('emoji-picker').classList.remove('show');
+  S.activeEmojiBtn = null;
+}
+
+// ════════════════════════════════════════════════
+// FILE UPLOAD
+// ════════════════════════════════════════════════
+function onFiles(e) {
+  S.files=[...S.files,...Array.from(e.target.files)].slice(0,10);
+  e.target.value=''; renderPreviews(); updateFileCount();
+}
+// ── Icônes et couleurs par type de fichier ──
+const FILE_ICONS = {
+  // Documents
+  pdf:  { icon:'📕', color:'#f04747', label:'PDF'  },
+  doc:  { icon:'📘', color:'#2b5eb5', label:'DOC'  },
+  docx: { icon:'📘', color:'#2b5eb5', label:'DOCX' },
+  xls:  { icon:'📗', color:'#1e7e34', label:'XLS'  },
+  xlsx: { icon:'📗', color:'#1e7e34', label:'XLSX' },
+  ppt:  { icon:'📙', color:'#d04f00', label:'PPT'  },
+  pptx: { icon:'📙', color:'#d04f00', label:'PPTX' },
+  txt:  { icon:'📃', color:'#72767d', label:'TXT'  },
+  csv:  { icon:'📊', color:'#1e7e34', label:'CSV'  },
+  json: { icon:'🔧', color:'#faa61a', label:'JSON' },
+  xml:  { icon:'🔧', color:'#faa61a', label:'XML'  },
+  md:   { icon:'📝', color:'#7289da', label:'MD'   },
+  // Archives
+  zip:  { icon:'🗜️', color:'#faa61a', label:'ZIP'  },
+  rar:  { icon:'🗜️', color:'#faa61a', label:'RAR'  },
+  '7z': { icon:'🗜️', color:'#faa61a', label:'7Z'   },
+  tar:  { icon:'🗜️', color:'#faa61a', label:'TAR'  },
+  gz:   { icon:'🗜️', color:'#faa61a', label:'GZ'   },
+  // Code
+  js:   { icon:'📜', color:'#f7df1e', label:'JS'   },
+  ts:   { icon:'📜', color:'#3178c6', label:'TS'   },
+  py:   { icon:'📜', color:'#3776ab', label:'PY'   },
+  html: { icon:'📜', color:'#e34f26', label:'HTML' },
+  css:  { icon:'📜', color:'#264de4', label:'CSS'  },
+  php:  { icon:'📜', color:'#8892bf', label:'PHP'  },
+  java: { icon:'📜', color:'#f89820', label:'JAVA' },
+  // Médias audio
+  mp3:  { icon:'🎵', color:'#23d18b', label:'MP3'  },
+  wav:  { icon:'🎵', color:'#23d18b', label:'WAV'  },
+  ogg:  { icon:'🎵', color:'#23d18b', label:'OGG'  },
+  flac: { icon:'🎵', color:'#23d18b', label:'FLAC' },
+  // Exécutables / autres
+  exe:  { icon:'⚙️', color:'#72767d', label:'EXE'  },
+  msi:  { icon:'⚙️', color:'#72767d', label:'MSI'  },
+  apk:  { icon:'📱', color:'#3ddc84', label:'APK'  },
+  iso:  { icon:'💿', color:'#72767d', label:'ISO'  },
+  // Fallback
+  _default: { icon:'📄', color:'#72767d', label:'FILE' },
+};
+
+function getFileIcon(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (file.type.startsWith('audio')) return FILE_ICONS[ext] || { icon:'🎵', color:'#23d18b', label: ext.toUpperCase() };
+  return FILE_ICONS[ext] || FILE_ICONS._default;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024)        return bytes + ' o';
+  if (bytes < 1024*1024)   return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+}
+
+function renderPreviews() {
+  const el=document.getElementById('previews'); el.innerHTML='';
+  S.files.forEach((f,i)=>{
+    const div=document.createElement('div'); div.className='preview-item';
+    const overLimit = f.size > S.guildLimit.limitBytes;
+
+    if (f.type.startsWith('image')) {
+      const img=document.createElement('img');
+      img.src=URL.createObjectURL(f);
+      img.title=f.name;
+      div.appendChild(img);
+    } else if (f.type.startsWith('video')) {
+      const vid=document.createElement('video');
+      vid.src=URL.createObjectURL(f); vid.muted=true;
+      vid.style.cssText='width:100%;height:100%;object-fit:cover';
+      div.appendChild(vid);
+      const ov=document.createElement('div');
+      ov.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;pointer-events:none';
+      ov.textContent='▶'; div.appendChild(ov);
+    } else {
+      // Document / archive / code / audio / autre
+      const info = getFileIcon(f);
+      const shortName = f.name.length > 12 ? f.name.substring(0, 10) + '…' : f.name;
+      div.style.cssText=`border-color:${info.color}33;background:${info.color}11`;
+      div.innerHTML=`<div class="preview-file" title="${f.name}">
+        <div style="font-size:22px;line-height:1;margin-bottom:3px">${info.icon}</div>
+        <div style="font-size:9px;font-weight:700;color:${info.color};letter-spacing:.04em">${info.label}</div>
+        <div style="font-size:8px;color:var(--muted);margin-top:2px;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortName}</div>
+        <div style="font-size:8px;margin-top:1px;color:${overLimit?'var(--red)':'var(--muted)'};font-weight:${overLimit?'700':'400'}">${formatSize(f.size)}</div>
+      </div>`;
+    }
+
+    // Bouton supprimer
+    const btn=document.createElement('button'); btn.className='rm'; btn.innerHTML='✕';
+    btn.title=`Retirer ${f.name}`;
+    btn.onclick=()=>{S.files.splice(i,1); renderPreviews(); updateFileCount();};
+    div.appendChild(btn);
+
+    // Barre de taille
+    const bar=document.createElement('div'); bar.className='size-bar';
+    const pct=Math.min(f.size/S.guildLimit.limitBytes*100,100);
+    bar.style.width=pct+'%';
+    if (overLimit) bar.classList.add('over');
+    else if (pct>75) bar.classList.add('warn');
+    div.appendChild(bar);
+
+    el.appendChild(div);
+  });
+}
+function clearPreviews(){S.files=[];document.getElementById('previews').innerHTML='';updateFileCount();}
+function updateFileCount(){
+  const n=S.files.length;
+  const fc=document.getElementById('file-count');fc.textContent=n;fc.classList.toggle('show',n>0);
+  document.getElementById('file-info').textContent=n>0?`${n} fichier${n>1?'s':''} joint${n>1?'s':''}`:'' ;
+  checkMsgSendable();
+}
+
+// ════════════════════════════════════════════════
+// INPUT HELPERS
+// ════════════════════════════════════════════════
+function onType(){
+  const val=document.getElementById('msg-input').value; const len=val.length;
+  const ctr=document.getElementById('char-ctr');ctr.textContent=`${len} / 2000`;
+  ctr.className=len>1900?'over':len>1700?'warn':'';
+  autoResize();checkMsgSendable();
+}
+function updateLimitBadge() {
+  const badge = document.getElementById('limit-badge');
+  const dot   = document.getElementById('limit-dot');
+  const txt   = document.getElementById('limit-text');
+  const lim   = S.guildLimit;
+  badge.classList.add('show');
+  dot.className = `limit-dot tier${lim.tier}`;
+  const boostInfo = lim.boosts > 0 ? ` · ${lim.boosts} boost${lim.boosts>1?'s':''}` : '';
+  txt.textContent = `Max ${lim.limitLabel}${boostInfo}`;
+}
+
+function checkMsgSendable(){
+  const content=document.getElementById('msg-input').value.trim();
+  const hasEmbed = embedIsActive() && !!buildEmbed();
+  document.getElementById('send-btn').disabled=!(S.channelId&&(content.length>0||S.files.length>0||hasEmbed)&&content.length<=2000);
+}
+function autoResize(){const el=document.getElementById('msg-input');el.style.height='auto';el.style.height=Math.min(el.scrollHeight,130)+'px';}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}autoResize();}
+
+// ════════════════════════════════════════════════
+// DELETE MESSAGE
+// ════════════════════════════════════════════════
+async function deleteMsg(messageId, channelId) {
+  if (!confirm('Supprimer ce message définitivement ?')) return;
+  try {
+    const r = await fetch(`/api/message?token=${encodeURIComponent(S.token)}&channelId=${channelId}&messageId=${messageId}`, { method:'DELETE' });
+    if (!r.ok) throw await r.json();
+    S.messages = S.messages.filter(m => m.id !== messageId);
+    renderMessages();
+    toast('Message supprimé','ok');
+  } catch(e) {
+    toast(e.message||'Suppression impossible','err');
+  }
+}
+
+// ════════════════════════════════════════════════
+// COMPONENTS V2 BUILDER
+// ════════════════════════════════════════════════
+let _cbId = 0;
+
+function addCompBlock(type) {
+  const id = ++_cbId;
+  const defaults = {
+    text:    { content: '' },
+    sep:     { divider: true, spacing: 1 },
+    buttons: { buttons: [{ label: '', style: '1', custom_id: '', url: '' }] },
+    section: { text: '', accessory_type: 'none', btn_label: '', btn_style: '1', btn_id: '', thumb_url: '' }
+  };
+  S.compBlocks.push({ id, type, data: { ...defaults[type] } });
+  renderCompPanel();
+  checkCompSendable();
+}
+
+function removeCompBlock(id) {
+  S.compBlocks = S.compBlocks.filter(b => b.id !== id);
+  renderCompPanel();
+  checkCompSendable();
+}
+
+function moveCompBlock(id, dir) {
+  const i = S.compBlocks.findIndex(b => b.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= S.compBlocks.length) return;
+  [S.compBlocks[i], S.compBlocks[j]] = [S.compBlocks[j], S.compBlocks[i]];
+  renderCompPanel();
+}
+
+function compBlockField(id, path, val) {
+  const b = S.compBlocks.find(b => b.id === id);
+  if (!b) return;
+  // path peut être "content", "divider", "spacing", etc.
+  const keys = path.split('.');
+  let obj = b.data;
+  for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
+  obj[keys[keys.length - 1]] = val;
+  updateCompPreview();
+  checkCompSendable();
+}
+
+function addCompButton(blockId) {
+  const b = S.compBlocks.find(b => b.id === blockId);
+  if (!b || b.data.buttons.length >= 5) return;
+  b.data.buttons.push({ label: '', style: '1', custom_id: '', url: '' });
+  renderCompPanel();
+}
+
+function removeCompButton(blockId, btnIdx) {
+  const b = S.compBlocks.find(b => b.id === blockId);
+  if (!b || b.data.buttons.length <= 1) return;
+  b.data.buttons.splice(btnIdx, 1);
+  renderCompPanel();
+}
+
+function compBtnField(blockId, btnIdx, key, val) {
+  const b = S.compBlocks.find(b => b.id === blockId);
+  if (!b) return;
+  b.data.buttons[btnIdx][key] = val;
+  updateCompPreview();
+  checkCompSendable();
+}
+
+const BLOCK_LABELS = { text:'📝 Texte', sep:'─ Séparateur', buttons:'🔘 Boutons', section:'📑 Section' };
+const BTN_STYLES = { '1':'Primaire', '2':'Secondaire', '3':'Succès', '4':'Danger', '5':'Lien (URL)' };
+const BTN_COLORS = { '1':'#5865f2','2':'#4e5058','3':'#57f287','4':'#ed4245','5':'#4e5058' };
+
+function renderCompPanel() {
+  const el = document.getElementById('comp-blocks');
+  const n = S.compBlocks.length;
+  if (n === 0) { el.innerHTML = ''; updateCompPreview(); return; }
+
+  el.innerHTML = S.compBlocks.map((b, idx) => {
+    const isFirst = idx === 0, isLast = idx === n - 1;
+    const header = `<div class="cb-head">
+      <div class="cb-title">${BLOCK_LABELS[b.type]} <span class="cb-badge">${b.type}</span></div>
+      <div class="cb-btns">
+        <button class="cb-ctrl" onclick="moveCompBlock(${b.id},-1)" ${isFirst?'disabled':''} title="Monter">▲</button>
+        <button class="cb-ctrl" onclick="moveCompBlock(${b.id},1)" ${isLast?'disabled':''} title="Descendre">▼</button>
+        <button class="cb-ctrl del" onclick="removeCompBlock(${b.id})" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+
+    let body = '';
+    if (b.type === 'text') {
+      body = `<div class="cb-field">
+        <div class="cb-label">Contenu (Markdown supporté)</div>
+        <textarea class="cb-textarea" rows="2" placeholder="**Gras**, *italique*, liens…" oninput="compBlockField(${b.id},'content',this.value)">${esc(b.data.content)}</textarea>
+      </div>`;
+    }
+    else if (b.type === 'sep') {
+      body = `<div class="cb-row cb-row-2">
+        <label class="cb-check"><input type="checkbox" ${b.data.divider?'checked':''} onchange="compBlockField(${b.id},'divider',this.checked)"> Ligne visible</label>
+        <div class="cb-field">
+          <div class="cb-label">Espacement</div>
+          <select class="cb-select" onchange="compBlockField(${b.id},'spacing',parseInt(this.value))">
+            <option value="1" ${b.data.spacing===1?'selected':''}>Petit</option>
+            <option value="2" ${b.data.spacing===2?'selected':''}>Grand</option>
+          </select>
+        </div>
+      </div>`;
+    }
+    else if (b.type === 'buttons') {
+      const btnRows = b.data.buttons.map((btn, bi) => {
+        const isLink = btn.style === '5';
+        return `<div class="cb-btn-row">
+          <div class="cb-field">
+            <div class="cb-label">Label</div>
+            <input class="cb-input" type="text" maxlength="80" value="${esc(btn.label)}" placeholder="Texte du bouton" oninput="compBtnField(${b.id},${bi},'label',this.value)"/>
+          </div>
+          <div class="cb-field">
+            <div class="cb-label">Style</div>
+            <select class="cb-select cb-btn-style" onchange="compBtnField(${b.id},${bi},'style',this.value);renderCompPanel()">
+              ${Object.entries(BTN_STYLES).map(([k,v])=>`<option value="${k}" ${btn.style===k?'selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div class="cb-field">
+            <div class="cb-label">${isLink?'URL':'custom_id'}</div>
+            <input class="cb-input${isLink && btn.url && !/^https?:\/\/.+/.test(btn.url) ? ' input-err' : ''}" type="text" value="${esc(isLink?btn.url:btn.custom_id)}" placeholder="${isLink?'https://…':'id_unique'}" oninput="compBtnField(${b.id},${bi},${isLink?'\'url\'':'\'custom_id\''},this.value);validateBtnUrl(this,${isLink})"/>
+          </div>
+          <button class="cb-btn-rm" onclick="removeCompButton(${b.id},${bi})" ${b.data.buttons.length<=1?'disabled':''} title="Retirer">✕</button>
+        </div>`;
+      }).join('');
+      body = `<div class="cb-btn-list">${btnRows}</div>
+        <button class="cb-add-btn-row" onclick="addCompButton(${b.id})" ${b.data.buttons.length>=5?'disabled':''}>+ Ajouter un bouton (max 5)</button>`;
+    }
+    else if (b.type === 'section') {
+      body = `<div class="cb-field">
+        <div class="cb-label">Texte principal (Markdown)</div>
+        <textarea class="cb-textarea" rows="2" placeholder="Texte de la section…" oninput="compBlockField(${b.id},'text',this.value)">${esc(b.data.text)}</textarea>
+      </div>
+      <div class="cb-row cb-row-2">
+        <div class="cb-field">
+          <div class="cb-label">Accessoire</div>
+          <select class="cb-select" onchange="compBlockField(${b.id},'accessory_type',this.value);renderCompPanel()">
+            <option value="none" ${b.data.accessory_type==='none'?'selected':''}>Aucun</option>
+            <option value="button" ${b.data.accessory_type==='button'?'selected':''}>Bouton</option>
+            <option value="thumbnail" ${b.data.accessory_type==='thumbnail'?'selected':''}>Miniature (image)</option>
+          </select>
+        </div>
+        ${b.data.accessory_type==='button'?`
+        <div class="cb-field">
+          <div class="cb-label">Style bouton</div>
+          <select class="cb-select" onchange="compBlockField(${b.id},'btn_style',this.value)">
+            ${Object.entries(BTN_STYLES).map(([k,v])=>`<option value="${k}" ${b.data.btn_style===k?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>`:b.data.accessory_type==='thumbnail'?`
+        <div class="cb-field">
+          <div class="cb-label">URL de l'image</div>
+          <input class="cb-input" type="text" value="${esc(b.data.thumb_url)}" placeholder="https://…/image.png" oninput="compBlockField(${b.id},'thumb_url',this.value)"/>
+        </div>`:''}
+      </div>
+      ${b.data.accessory_type==='button'?`<div class="cb-row cb-row-2">
+        <div class="cb-field"><div class="cb-label">Label bouton</div><input class="cb-input" type="text" maxlength="80" value="${esc(b.data.btn_label)}" placeholder="Texte" oninput="compBlockField(${b.id},'btn_label',this.value)"/></div>
+        <div class="cb-field"><div class="cb-label">custom_id</div><input class="cb-input" type="text" value="${esc(b.data.btn_id)}" placeholder="id_unique" oninput="compBlockField(${b.id},'btn_id',this.value)"/></div>
+      </div>`:''}`;
+    }
+
+    return `<div class="cb" id="cb-${b.id}">${header}${body}</div>`;
+  }).join('');
+
+  updateCompPreview();
+}
+
+function buildCompJSON() {
+  const blocks = [];
+  for (const b of S.compBlocks) {
+    if (b.type === 'text') {
+      if (!b.data.content.trim()) continue;
+      blocks.push({ type: 10, content: b.data.content });
+    }
+    else if (b.type === 'sep') {
+      blocks.push({ type: 14, divider: b.data.divider, spacing: b.data.spacing });
+    }
+    else if (b.type === 'buttons') {
+      const comps = b.data.buttons
+        .filter(btn => btn.label.trim())
+        .map(btn => {
+          const style = parseInt(btn.style);
+          const c = { type: 2, style, label: btn.label };
+          if (style === 5) c.url = btn.url || 'https://example.com';
+          else c.custom_id = btn.custom_id || `btn_${Math.random().toString(36).slice(2,7)}`;
+          return c;
+        });
+      if (comps.length) blocks.push({ type: 1, components: comps });
+    }
+    else if (b.type === 'section') {
+      if (!b.data.text.trim()) continue;
+      const comp = { type: 9, components: [{ type: 10, content: b.data.text }] };
+      if (b.data.accessory_type === 'button' && b.data.btn_label.trim()) {
+        comp.accessory = { type: 2, style: parseInt(b.data.btn_style), label: b.data.btn_label,
+          custom_id: b.data.btn_id || `btn_${Math.random().toString(36).slice(2,7)}` };
+      } else if (b.data.accessory_type === 'thumbnail' && b.data.thumb_url.trim()) {
+        comp.accessory = { type: 11, media: { url: b.data.thumb_url } };
+      }
+      blocks.push(comp);
+    }
+  }
+  if (!blocks.length) return [];
+  const useContainer = document.getElementById('comp-use-container')?.checked;
+  if (useContainer) return [{ type: 17, components: blocks }];
+  return blocks;
+}
+
+function validateBtnUrl(input, isLink) {
+  if (!isLink) return;
+  const ok = !input.value || /^https?:\/\/.+/.test(input.value);
+  input.classList.toggle('input-err', !ok && input.value.length > 0);
+  checkCompSendable();
+}
+
+function compHasErrors() {
+  for (const b of S.compBlocks) {
+    if (b.type === 'buttons') {
+      for (const btn of b.data.buttons) {
+        if (parseInt(btn.style) === 5 && btn.label.trim()) {
+          if (!btn.url || !/^https?:\/\/.+/.test(btn.url)) return 'URL manquante ou invalide sur un bouton Lien (doit commencer par https://)';
+        }
+      }
+    }
+    if (b.type === 'section' && b.data.accessory_type === 'button') {
+      if (parseInt(b.data.btn_style) === 5 && b.data.btn_label.trim()) {
+        if (!b.data.btn_id || !/^https?:\/\/.+/.test(b.data.btn_id)) return 'URL invalide sur le bouton de section';
+      }
+    }
+  }
+  return null;
+}
+
+function updateCompPreview() {
+  const comps = buildCompJSON();
+  const pre = document.getElementById('comp-json-pre');
+  if (pre) pre.textContent = JSON.stringify(comps, null, 2);
+}
+
+function checkCompSendable() {
+  const comps = buildCompJSON();
+  const n = S.compBlocks.length;
+  const hint = document.getElementById('comp-hint');
+  if (hint) hint.textContent = `${n} bloc${n>1?'s':''}`;
+  const btn = document.getElementById('send-comp-btn');
+  if (btn) btn.disabled = !(S.channelId && comps.length > 0);
+}
+
+async function sendComponents() {
+  if (!S.channelId) { toast('Sélectionnez un salon','err'); return; }
+  const err = compHasErrors();
+  if (err) { toast(err, 'err'); return; }
+  const components = buildCompJSON();
+  if (!components.length) { toast('Aucun bloc valide à envoyer','err'); return; }
+  document.getElementById('send-comp-btn').disabled = true;
+  try {
+    const r = await fetch('/api/send-components', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: S.token, channelId: S.channelId, components })
+    });
+    const msg = await r.json();
+    if (!r.ok) {
+      console.error('[Components V2] Erreur Discord :', JSON.stringify(msg, null, 2));
+      // Extraire le premier champ en erreur si disponible
+      let detail = msg.message || 'Erreur Discord';
+      if (msg.errors) {
+        const flat = JSON.stringify(msg.errors).match(/"message":"([^"]+)"/);
+        if (flat) detail += ` — ${flat[1]}`;
+      }
+      throw new Error(detail);
+    }
+    S.messages.push(msg); renderMessages();
+    S.compBlocks = []; renderCompPanel();
+    toast('Composants envoyés !','ok');
+  } catch(e) {
+    toast(e.message || 'Erreur envoi composants','err');
+  }
+  checkCompSendable();
+}
+
+// ════════════════════════════════════════════════
+// EDIT MESSAGE
+// ════════════════════════════════════════════════
+function openEditZone(msgId) {
+  document.querySelectorAll('.msg-edit-zone.show').forEach(el => {
+    const id = el.id.replace('ez-','');
+    if (id !== msgId) closeEditZone(id);
+  });
+  const ez  = document.getElementById(`ez-${msgId}`);
+  const eta = document.getElementById(`eta-${msgId}`);
+  if (!ez || !eta) return;
+  ez.classList.add('show');
+  eta.style.height = 'auto';
+  eta.style.height = Math.min(eta.scrollHeight, 120) + 'px';
+  eta.focus();
+  eta.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msgId); }
+    if (e.key === 'Escape') closeEditZone(msgId);
+    eta.removeEventListener('keydown', handler);
+  });
+}
+
+function closeEditZone(msgId) {
+  const ez = document.getElementById(`ez-${msgId}`);
+  if (ez) ez.classList.remove('show');
+}
+
+async function saveEdit(msgId, channelId) {
+  channelId = channelId || S.channelId;
+  const eta = document.getElementById(`eta-${msgId}`);
+  if (!eta) return;
+  const content = eta.value.trim();
+  if (!content) { toast('Le message ne peut pas être vide','err'); return; }
+  try {
+    const r = await fetch('/api/message', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: S.token, channelId, messageId: msgId, content })
+    });
+    const msg = await r.json();
+    if (!r.ok) throw msg;
+    const idx = S.messages.findIndex(m => m.id === msgId);
+    if (idx >= 0) S.messages[idx].content = msg.content;
+    const mt = document.getElementById(`mt-${msgId}`);
+    if (mt) mt.textContent = msg.content;
+    closeEditZone(msgId);
+    toast('Message modifié','ok');
+  } catch(e) {
+    toast(e.message || 'Erreur lors de la modification','err');
+  }
+}
+
+// ════════════════════════════════════════════════
+// REPLY
+// ════════════════════════════════════════════════
+function setReply(msgId, author, preview) {
+  S.replyTo = msgId;
+  document.getElementById('rb-author').textContent = author;
+  document.getElementById('rb-preview').textContent = preview ? `"${preview}${preview.length >= 60 ? '…' : ''}"` : '(pas de texte)';
+  document.getElementById('reply-bar').classList.add('show');
+  document.getElementById('msg-input').focus();
+  setMode('msg');
+}
+
+function clearReply() {
+  S.replyTo = null;
+  document.getElementById('reply-bar').classList.remove('show');
+}
+
+// ════════════════════════════════════════════════
+// EMBED BUILDER
+// ════════════════════════════════════════════════
+function toggleEmbed() {
+  const el  = document.getElementById('embed-builder');
+  const btn = document.getElementById('embed-toggle');
+  const show = !el.classList.contains('show');
+  el.classList.toggle('show', show);
+  btn.classList.toggle('active', show);
+}
+
+function syncEmbedColor(hex) {
+  document.getElementById('eb-color-hex').value = hex;
+  document.getElementById('eb-preview-bar').style.background = hex;
+  updateEmbedPreview();
+}
+
+function syncEmbedColorHex(val) {
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById('eb-color-picker').value = val;
+    document.getElementById('eb-preview-bar').style.background = val;
+  }
+  updateEmbedPreview();
+}
+
+function addEmbedField() {
+  if (S.embedFields.length >= 25) return;
+  S.embedFields.push({ name: '', value: '', inline: false });
+  renderEmbedFields();
+}
+
+function removeEmbedField(i) {
+  S.embedFields.splice(i, 1);
+  renderEmbedFields();
+}
+
+function renderEmbedFields() {
+  const el = document.getElementById('eb-fields');
+  el.innerHTML = S.embedFields.map((f, i) => `
+    <div class="eb-field-item">
+      <div><div class="eb-label">Nom</div><input class="eb-input" type="text" maxlength="256" value="${esc(f.name)}" placeholder="Nom" oninput="S.embedFields[${i}].name=this.value;updateEmbedPreview()"/></div>
+      <div><div class="eb-label">Valeur</div><input class="eb-input" type="text" maxlength="1024" value="${esc(f.value)}" placeholder="Valeur" oninput="S.embedFields[${i}].value=this.value;updateEmbedPreview()"/></div>
+      <label class="eb-field-inline"><input type="checkbox" ${f.inline?'checked':''} onchange="S.embedFields[${i}].inline=this.checked;updateEmbedPreview()"/> Inline</label>
+      <button class="eb-rm-field" onclick="removeEmbedField(${i})">✕</button>
+    </div>`).join('');
+}
+
+function buildEmbed() {
+  const title   = document.getElementById('eb-title').value.trim();
+  const desc    = document.getElementById('eb-desc').value.trim();
+  const url     = document.getElementById('eb-url').value.trim();
+  const image   = document.getElementById('eb-image').value.trim();
+  const thumb   = document.getElementById('eb-thumb').value.trim();
+  const author  = document.getElementById('eb-author').value.trim();
+  const footer  = document.getElementById('eb-footer').value.trim();
+  const colorHex = document.getElementById('eb-color-hex').value.trim();
+  if (!title && !desc && !image && S.embedFields.length === 0) return null;
+  const embed = {};
+  if (title)  embed.title = title;
+  if (desc)   embed.description = desc;
+  if (url && /^https?:\/\//.test(url)) embed.url = url;
+  if (/^#[0-9a-fA-F]{6}$/.test(colorHex)) embed.color = parseInt(colorHex.slice(1), 16);
+  if (image && /^https?:\/\//.test(image)) embed.image = { url: image };
+  if (thumb && /^https?:\/\//.test(thumb)) embed.thumbnail = { url: thumb };
+  if (author) embed.author = { name: author };
+  if (footer) embed.footer = { text: footer };
+  const fields = S.embedFields.filter(f => f.name.trim() && f.value.trim());
+  if (fields.length) embed.fields = fields;
+  return embed;
+}
+
+function updateEmbedPreview() { /* aperçu live si besoin futur */ }
+
+function clearEmbed() {
+  ['eb-title','eb-desc','eb-url','eb-image','eb-thumb','eb-author','eb-footer'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('eb-color-hex').value = '#5865f2';
+  document.getElementById('eb-color-picker').value = '#5865f2';
+  document.getElementById('eb-preview-bar').style.background = '#5865f2';
+  S.embedFields = [];
+  renderEmbedFields();
+}
+
+function embedIsActive() {
+  return document.getElementById('embed-builder').classList.contains('show');
+}
+
+// ════════════════════════════════════════════════
+// AUTO-REFRESH
+// ════════════════════════════════════════════════
+let _arTimer = null;
+
+function setAutoRefresh(sec) {
+  clearInterval(_arTimer);
+  _arTimer = null;
+  const dot = document.getElementById('ar-dot');
+  const s = parseInt(sec);
+  if (s > 0 && S.channelId) {
+    _arTimer = setInterval(() => {
+      if (S.channelId) loadMessages(true);
+    }, s * 1000);
+    dot.classList.add('active');
+  } else {
+    dot.classList.remove('active');
+  }
+}
+
+// ════════════════════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════════════════════
+async function loadTemplates() {
+  try {
+    const r = await fetch('/api/templates');
+    const tpls = await r.json();
+    renderTemplates(tpls);
+  } catch {}
+}
+
+function renderTemplates(tpls) {
+  const el = document.getElementById('tpl-list');
+  const count = document.getElementById('tpl-count');
+  if (count) count.textContent = `${tpls.length} sauvegardé(s)`;
+  if (!tpls.length) { el.innerHTML = '<div class="tpl-empty">Aucun template sauvegardé</div>'; return; }
+  el.innerHTML = tpls.map(t => `
+    <div class="tpl-item" onclick="applyTemplate('${t.id}')">
+      <span class="tpl-item-name">${esc(t.name)}</span>
+      <span class="tpl-item-type">${t.type||'msg'}</span>
+      <button class="tpl-item-rm" onclick="deleteTemplate(event,'${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function saveTemplate() {
+  const name = document.getElementById('tpl-name-input').value.trim();
+  if (!name) { toast('Donnez un nom au template','err'); return; }
+  const content = document.getElementById('msg-input').value.trim();
+  const embed   = embedIsActive() ? buildEmbed() : null;
+  if (!content && !embed) { toast('Rien à sauvegarder','err'); return; }
+  const tpl = { name, type: embed ? 'embed' : 'msg', content, embed };
+  try {
+    await fetch('/api/templates', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(tpl) });
+    document.getElementById('tpl-name-input').value = '';
+    await loadTemplates();
+    toast('Template sauvegardé','ok');
+  } catch { toast('Erreur sauvegarde','err'); }
+}
+
+async function deleteTemplate(e, id) {
+  e.stopPropagation();
+  await fetch(`/api/templates/${id}`, { method:'DELETE' });
+  await loadTemplates();
+  toast('Template supprimé','ok');
+}
+
+async function applyTemplate(id) {
+  try {
+    const r = await fetch('/api/templates');
+    const tpls = await r.json();
+    const t = tpls.find(x => x.id === id);
+    if (!t) return;
+    if (t.content) {
+      document.getElementById('msg-input').value = t.content;
+      onType();
+    }
+    if (t.embed) {
+      const eb = t.embed;
+      if (eb.title)       document.getElementById('eb-title').value   = eb.title;
+      if (eb.description) document.getElementById('eb-desc').value    = eb.description;
+      if (eb.url)         document.getElementById('eb-url').value     = eb.url;
+      if (eb.image?.url)  document.getElementById('eb-image').value   = eb.image.url;
+      if (eb.thumbnail?.url) document.getElementById('eb-thumb').value = eb.thumbnail.url;
+      if (eb.author?.name)  document.getElementById('eb-author').value = eb.author.name;
+      if (eb.footer?.text)  document.getElementById('eb-footer').value = eb.footer.text;
+      if (eb.color) {
+        const hex = '#' + eb.color.toString(16).padStart(6,'0');
+        document.getElementById('eb-color-hex').value    = hex;
+        document.getElementById('eb-color-picker').value = hex;
+        document.getElementById('eb-preview-bar').style.background = hex;
+      }
+      S.embedFields = eb.fields || [];
+      renderEmbedFields();
+      if (!document.getElementById('embed-builder').classList.contains('show')) toggleEmbed();
+    }
+    document.getElementById('tpl-dropdown').classList.remove('show');
+    toast(`Template "${t.name}" chargé`,'ok');
+  } catch { toast('Erreur chargement template','err'); }
+}
+
+function toggleTplDropdown() {
+  const el = document.getElementById('tpl-dropdown');
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) loadTemplates();
+}
+
+// ════════════════════════════════════════════════
+// LIGHTBOX & UTILS
+// ════════════════════════════════════════════════
+function openLb(url){document.getElementById('lb-img').src=url;document.getElementById('lightbox').classList.add('show');}
+let _tt;
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className=`show${type?' '+type:''}`;clearTimeout(_tt);_tt=setTimeout(()=>el.className='',2600);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
