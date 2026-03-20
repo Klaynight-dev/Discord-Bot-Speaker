@@ -1,0 +1,20 @@
+# Dépendances
+node_modules/
+
+# Config sensible — NE PAS COMMITER (contient le token bot Discord)
+config.json
+
+# Variables d'environnement
+.env
+.env.*
+
+# Uploads temporaires
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
