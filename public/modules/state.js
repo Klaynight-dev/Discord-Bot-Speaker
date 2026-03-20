@@ -1,0 +1,23 @@
+// ── Shared application state ──────────────────────────
+export const S = {
+  token: /** @type {string} */ (""),
+  bot: /** @type {Record<string,any>|null} */ (null),
+  connected: false,
+  guilds: /** @type {any[]} */ ([]),
+  channels: /** @type {any[]} */ ([]),
+  messages: /** @type {any[]} */ ([]),
+  guildId: /** @type {string|null} */ (null),
+  channelId: /** @type {string|null} */ (null),
+  files: /** @type {File[]} */ ([]),
+  mode: "msg",
+  guildEmojis: /** @type {any[]} */ ([]),
+  guildLimit: { tier: 0, limitBytes: 26214400, limitLabel: "25 MB" },
+  replyTo: /** @type {string|null} */ (null),
+  embedFields: /** @type {any[]} */ ([]),
+  compBlocks: /** @type {any[]} */ ([]),
+  arTimer: /** @type {number|null} */ (null),
+  slashCmds: /** @type {any[]} */ ([]),
+  editingChanId: /** @type {string|null} */ (null),
+  msgFilter: "",
+  _lastMsgId: "",
+};
